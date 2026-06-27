@@ -66,6 +66,42 @@ class DistrictData {
 
   bool get hasRouting => district.hasRouting && _basin.isNotEmpty;
 
+  /// Shelter source categories present here ('dmc', 'literature', 'osm').
+  Set<String> get availableSources => shelters
+      .map((s) => (s.source ?? '').toLowerCase())
+      .where((s) => s.isNotEmpty)
+      .toSet();
+
+  /// Canonical basin key for the enabled toggles (DMC is always on; the key is
+  /// the sorted '+'-joined intersection of enabled and available sources).
+  String _basinKey({required bool literature, required bool osm}) {
+    final enabled = <String>{
+      'dmc',
+      if (literature) 'literature',
+      if (osm) 'osm',
+    };
+    final sel = enabled.intersection(availableSources).toList()..sort();
+    return sel.join('+');
+  }
+
+  /// Whether a route can be computed with the given toggle selection.
+  bool canRoute({bool includeLiterature = false, bool includeOsm = false}) {
+    final b = _basin[_basinKey(literature: includeLiterature, osm: includeOsm)];
+    return b != null && b.isNotEmpty;
+  }
+
+  /// Hint shown when the current toggle selection has no usable shelters.
+  String? _routeHint() {
+    if (availableSources.contains('osm')) {
+      return 'Turn on "OpenStreetMap shelters" in Settings to get routes in '
+          '${district.name}.';
+    }
+    if (availableSources.contains('literature')) {
+      return 'Turn on "Research-supported shelters" in Settings to get routes here.';
+    }
+    return null;
+  }
+
   factory DistrictData.parse({
     required District district,
     required Map<String, dynamic> roadsGeojson,
@@ -132,15 +168,15 @@ class DistrictData {
 
     final basin = <String, Map<String, Map<int, BasinEntry>>>{};
     if (basinJson != null && basinJson.isNotEmpty) {
-      final isNested = basinJson.keys.any((k) => k == 'dmc' || k == 'all');
-      if (isNested) {
+      // nested = { sourceCombo -> strategy -> ... }; legacy flat keys are strategies
+      const strategyKeys = {'shortest', 'balanced', 'safest'};
+      final isFlat = basinJson.keys.every(strategyKeys.contains);
+      if (isFlat) {
+        basin['dmc'] = parseSet(basinJson);
+      } else {
         basinJson.forEach((setKey, setMap) {
           basin[setKey] = parseSet(setMap as Map<String, dynamic>);
         });
-      } else {
-        final flat = parseSet(basinJson);
-        basin['dmc'] = flat;
-        basin['all'] = flat;
       }
     }
 
@@ -205,17 +241,18 @@ class DistrictData {
   }
 
   /// Trace the precomputed evacuation route to the nearest shelter, fully
-  /// offline. [includeLiterature] selects the all-shelters basin; otherwise
-  /// only DMC-verified shelters are used as destinations.
+  /// offline, using the basin matching the enabled shelter sources (DMC always
+  /// on; research/OSM are optional toggles).
   EvacuationRoute traceOffline(
     double lat,
     double lng,
     RouteStrategy strategy, {
     bool includeLiterature = false,
+    bool includeOsm = false,
   }) {
-    final set = includeLiterature ? 'all' : 'dmc';
-    final strat = (_basin[set] ?? _basin['all'] ?? _basin['dmc'])?[strategy.id];
-    if (strat == null) return EvacuationRoute.failsafe(strategy);
+    final key = _basinKey(literature: includeLiterature, osm: includeOsm);
+    final strat = _basin[key]?[strategy.id];
+    if (strat == null) return EvacuationRoute.failsafe(strategy, _routeHint());
 
     final src = nearestNode(lat, lng);
     if (src == null || !strat.containsKey(src)) {

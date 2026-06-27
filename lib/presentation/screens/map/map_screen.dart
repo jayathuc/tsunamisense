@@ -339,27 +339,31 @@ class _MapScreenState extends State<MapScreen> {
 
   MarkerLayer _shelterMarkers(DistrictData data, GetraProvider p) {
     final visible = data.shelters.where((z) {
-      final isDmc = (z.source ?? '').toLowerCase() == 'dmc';
-      return isDmc || p.showLiteratureShelters;
+      final s = (z.source ?? '').toLowerCase();
+      if (s == 'literature') return p.showLiteratureShelters;
+      if (s == 'osm') return p.showOsmShelters;
+      return true; // dmc / unknown always shown
     }).toList();
     return MarkerLayer(
       markers: visible.map((z) {
-        final isDmc = (z.source ?? '').toLowerCase() == 'dmc';
+        final s = (z.source ?? '').toLowerCase();
+        final (Color color, String label) = switch (s) {
+          'literature' => (AppTheme.oceanLight, 'Research-supported'),
+          'osm' => (AppTheme.alertOrange, 'OpenStreetMap — unverified'),
+          _ => (AppTheme.alertGreen, 'DMC-verified'),
+        };
         return Marker(
           point: LatLng(z.latitude, z.longitude),
           width: 30,
           height: 30,
           child: GestureDetector(
             onTap: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(
-                '${z.name} • ${z.typeDisplayName} '
-                '(${isDmc ? 'DMC-verified' : 'Community'})',
-              ),
+              content: Text('${z.name} • ${z.typeDisplayName} ($label)'),
               duration: const Duration(seconds: 2),
             )),
             child: Container(
               decoration: BoxDecoration(
-                color: isDmc ? AppTheme.alertGreen : AppTheme.oceanLight,
+                color: color,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
                 boxShadow: const [
@@ -555,6 +559,7 @@ class _Legend extends StatelessWidget {
   const _Legend({required this.provider});
   @override
   Widget build(BuildContext context) {
+    final sources = provider.data?.availableSources ?? const <String>{};
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -565,9 +570,12 @@ class _Legend extends StatelessWidget {
             _line(AppTheme.alertGreen, 'Safe road'),
             _line(AppTheme.alertRed, 'Flood-prone road'),
             _dot(AppTheme.alertRed.withOpacity(0.35), 'Inundation zone'),
-            _dot(AppTheme.alertGreen, 'DMC shelter'),
-            if (provider.showLiteratureShelters)
+            if (sources.contains('dmc'))
+              _dot(AppTheme.alertGreen, 'DMC shelter'),
+            if (sources.contains('literature') && provider.showLiteratureShelters)
               _dot(AppTheme.oceanLight, 'Research shelter'),
+            if (sources.contains('osm') && provider.showOsmShelters)
+              _dot(AppTheme.alertOrange, 'OSM shelter'),
             _dot(const Color(0xFF1A73E8), 'You'),
           ],
         ),
@@ -650,6 +658,8 @@ class _BottomPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final route = provider.route;
+    final showOsmNote = provider.showOsmShelters &&
+        (provider.data?.availableSources.contains('osm') ?? false);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -657,9 +667,19 @@ class _BottomPanel extends StatelessWidget {
         if (origin == null)
           _hintCard(context)
         else ...[
-          if (provider.hasRouting) _StrategySelector(provider: provider),
-          const SizedBox(height: 8),
+          if (provider.routableNow) ...[
+            _StrategySelector(provider: provider),
+            const SizedBox(height: 8),
+          ],
           if (route != null) _RouteCard(route: route, onClear: onClear),
+        ],
+        if (showOsmNote) ...[
+          const SizedBox(height: 6),
+          const Text(
+            'OpenStreetMap shelters are auto-identified and unverified.',
+            style: TextStyle(fontSize: 10, color: AppTheme.alertOrange),
+            textAlign: TextAlign.center,
+          ),
         ],
         const SizedBox(height: 6),
         const Center(
@@ -671,20 +691,21 @@ class _BottomPanel extends StatelessWidget {
   }
 
   Widget _hintCard(BuildContext context) {
-    final routable = provider.hasRouting;
+    final hint = provider.routingHint;
+    final isGuide = hint != null;
     return Card(
+      color: isGuide ? AppTheme.alertOrange.withOpacity(0.12) : null,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
           children: [
-            Icon(routable ? Icons.touch_app : Icons.info_outline,
-                color: AppTheme.primaryBlue),
+            Icon(isGuide ? Icons.info_outline : Icons.touch_app,
+                color: isGuide ? AppTheme.alertOrange : AppTheme.primaryBlue),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                routable
-                    ? 'Tap “My location”, or tap anywhere on the map, to find the safest route to a shelter.'
-                    : 'Routing for this district is coming soon. The map shows flood-prone roads and the inundation zone.',
+                hint ??
+                    'Tap “My location”, or tap anywhere on the map, to find the safest route to a shelter.',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),

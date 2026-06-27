@@ -172,6 +172,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: (value) =>
                 context.read<GetraProvider>().setShowLiteratureShelters(value),
           ),
+          SwitchListTile(
+            title: const Text('Show OpenStreetMap shelters'),
+            subtitle: const Text(
+              'Auto-identified public buildings (schools, temples, hospitals) '
+              'on high ground. Unverified — enables routing for Matara and '
+              'Tangalle.',
+            ),
+            secondary: const Icon(Icons.public),
+            value: context.watch<GetraProvider>().showOsmShelters,
+            onChanged: (value) =>
+                context.read<GetraProvider>().setShowOsmShelters(value),
+          ),
 
           const Divider(),
 

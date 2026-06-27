@@ -34,6 +34,7 @@ class GetraProvider extends ChangeNotifier {
   bool _showInundation = true;
   bool _showShelters = true;
   bool _showLiteratureShelters = false; // research-supported shelters, off by default
+  bool _showOsmShelters = false; // OpenStreetMap-identified shelters, off by default
 
   // -- getters -------------------------------------------------------------
   GetraStatus get status => _status;
@@ -48,7 +49,33 @@ class GetraProvider extends ChangeNotifier {
   bool get showInundation => _showInundation;
   bool get showShelters => _showShelters;
   bool get showLiteratureShelters => _showLiteratureShelters;
+  bool get showOsmShelters => _showOsmShelters;
   bool get hasRouting => _data?.hasRouting ?? false;
+
+  /// Whether the active district can route with the current shelter toggles.
+  bool get routableNow =>
+      _data?.canRoute(
+        includeLiterature: _showLiteratureShelters,
+        includeOsm: _showOsmShelters,
+      ) ??
+      false;
+
+  /// Guidance to enable a shelter toggle when the active district has routing
+  /// data but the current selection has no usable shelters (e.g. Matara with
+  /// OpenStreetMap shelters turned off).
+  String? get routingHint {
+    final d = _data;
+    if (d == null || !d.hasRouting || routableNow) return null;
+    final sources = d.availableSources;
+    if (sources.contains('osm') && !_showOsmShelters) {
+      return 'Turn on "OpenStreetMap shelters" in Settings to get routes in '
+          '${d.district.name}.';
+    }
+    if (sources.contains('literature') && !_showLiteratureShelters) {
+      return 'Turn on "Research-supported shelters" in Settings for more options.';
+    }
+    return null;
+  }
 
   // -- lifecycle -----------------------------------------------------------
 
@@ -124,7 +151,7 @@ class GetraProvider extends ChangeNotifier {
       _error = null;
       if (_lastLat != null && _lastLng != null) {
         _route = _data!.traceOffline(_lastLat!, _lastLng!, _strategy,
-            includeLiterature: _showLiteratureShelters);
+            includeLiterature: _showLiteratureShelters, includeOsm: _showOsmShelters);
       }
     } catch (e) {
       _error = _friendly(e);
@@ -158,7 +185,7 @@ class GetraProvider extends ChangeNotifier {
     _strategy = s;
     if (_route != null && _lastLat != null && _lastLng != null) {
       _route = _data?.traceOffline(_lastLat!, _lastLng!, _strategy,
-          includeLiterature: _showLiteratureShelters);
+          includeLiterature: _showLiteratureShelters, includeOsm: _showOsmShelters);
     }
     notifyListeners();
   }
@@ -171,7 +198,7 @@ class GetraProvider extends ChangeNotifier {
     if (d == null) return;
     _route = d.hasRouting
         ? d.traceOffline(lat, lng, _strategy,
-            includeLiterature: _showLiteratureShelters)
+            includeLiterature: _showLiteratureShelters, includeOsm: _showOsmShelters)
         : EvacuationRoute.failsafe(
             _strategy,
             'Routing for ${d.district.name} is coming soon. For now, move '
@@ -210,6 +237,7 @@ class GetraProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _showLiteratureShelters =
           prefs.getBool('show_literature_shelters') ?? false;
+      _showOsmShelters = prefs.getBool('show_osm_shelters') ?? false;
     } catch (_) {}
   }
 
@@ -219,12 +247,28 @@ class GetraProvider extends ChangeNotifier {
     _showLiteratureShelters = value;
     if (_route != null && _lastLat != null && _lastLng != null) {
       _route = _data?.traceOffline(_lastLat!, _lastLng!, _strategy,
-          includeLiterature: _showLiteratureShelters);
+          includeLiterature: _showLiteratureShelters, includeOsm: _showOsmShelters);
     }
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('show_literature_shelters', value);
+    } catch (_) {}
+  }
+
+  /// Persisted toggle for OpenStreetMap-identified (unverified) shelters. Also
+  /// re-routes, which is what makes Matara/Tangalle usable when enabled.
+  Future<void> setShowOsmShelters(bool value) async {
+    _showOsmShelters = value;
+    if (_route != null && _lastLat != null && _lastLng != null) {
+      _route = _data?.traceOffline(_lastLat!, _lastLng!, _strategy,
+          includeLiterature: _showLiteratureShelters,
+          includeOsm: _showOsmShelters);
+    }
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('show_osm_shelters', value);
     } catch (_) {}
   }
 
