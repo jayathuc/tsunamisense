@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../providers/earthquake_provider.dart';
+import '../../../providers/emergency_provider.dart';
 import '../../../providers/lesson_provider.dart';
 import '../../../providers/checklist_provider.dart';
+import '../../widgets/earthquake_detail_sheet.dart';
 
 /// Home screen - Dashboard showing current status
 class HomeScreen extends StatelessWidget {
@@ -30,6 +32,8 @@ class HomeScreen extends StatelessWidget {
 
                 // Alert Status Card
                 _buildAlertStatusCard(context),
+                const SizedBox(height: 12),
+                _buildSimulateButton(context),
                 const SizedBox(height: 20),
 
                 // Quick Actions
@@ -85,6 +89,25 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildSimulateButton(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () {
+        context.read<EmergencyProvider>().declareEmergency();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Emergency drill started — opening evacuation map'),
+          duration: Duration(seconds: 2),
+        ));
+      },
+      icon: const Icon(Icons.crisis_alert),
+      label: const Text('Simulate tsunami warning (drill)'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppTheme.alertRed,
+        side: const BorderSide(color: AppTheme.alertRed),
+        minimumSize: const Size.fromHeight(48),
+      ),
     );
   }
 
@@ -451,9 +474,7 @@ class _EarthquakeListItem extends StatelessWidget {
           '${earthquake.timeAgo} • Depth: ${earthquake.depth.toStringAsFixed(0)} km',
         ),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () {
-          // Show earthquake details
-        },
+        onTap: () => showEarthquakeDetailSheet(context, earthquake),
       ),
     );
   }

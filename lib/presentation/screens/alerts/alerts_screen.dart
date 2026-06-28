@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../providers/earthquake_provider.dart';
+import '../../../providers/emergency_provider.dart';
 import '../../../data/models/earthquake.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
@@ -63,6 +64,32 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   child: _AlertStatusCard(
                     alertLevel: provider.currentAlertLevel,
                     isLoading: provider.isLoading,
+                  ),
+                ),
+
+                // Demonstration: trigger the emergency evacuation flow
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        context.read<EmergencyProvider>().declareEmergency();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Emergency drill started — opening evacuation map'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.crisis_alert),
+                      label: const Text('Simulate tsunami warning (drill)'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.alertRed,
+                        side: const BorderSide(color: AppTheme.alertRed),
+                        minimumSize: const Size.fromHeight(46),
+                      ),
+                    ),
                   ),
                 ),
 

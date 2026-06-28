@@ -12,6 +12,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../data/models/district_data.dart';
 import '../../../data/models/evacuation_route.dart';
 import '../../../data/models/route_strategy.dart';
+import '../../../providers/emergency_provider.dart';
 import '../../../providers/getra_provider.dart';
 
 /// Evacuation map: GETRA-classified roads, the tsunami inundation zone,
@@ -33,6 +34,7 @@ class _MapScreenState extends State<MapScreen> {
   String? _centeredDistrict; // id of the district the map is centered on
   double _rotation = 0; // current map bearing in degrees
   StreamSubscription<MapEvent>? _mapEventSub;
+  DateTime? _handledEmergency; // declaration we've already auto-evacuated for
 
   @override
   void dispose() {
@@ -141,6 +143,41 @@ class _MapScreenState extends State<MapScreen> {
     p.computeRoute(ll.latitude, ll.longitude);
   }
 
+  /// Emergency flow: locate the user and route to the nearest DMC shelter via
+  /// the safest path, automatically (triggered by a tsunami-confirmed alert).
+  Future<void> _runEmergencyEvacuation(GetraProvider p) async {
+    setState(() => _loadingLocation = true);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception('no location permission');
+      }
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      final ll = LatLng(pos.latitude, pos.longitude);
+      setState(() {
+        _gpsLocation = ll;
+        _origin = ll;
+        _originIsGps = true;
+      });
+      p.computeRoute(ll.latitude, ll.longitude, emergencyDmcOnly: true);
+      _mapController.move(ll, 15);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Enable location to get your evacuation route.'),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _loadingLocation = false);
+    }
+  }
+
   void _clear(GetraProvider p) {
     setState(() => _origin = null);
     p.clearRoute();
@@ -168,34 +205,61 @@ class _MapScreenState extends State<MapScreen> {
         _ensureLayers(data);
         _maybeCenter(p);
 
+        final emergency = context.watch<EmergencyProvider>();
+        if (emergency.active && emergency.declaredAt != _handledEmergency) {
+          _handledEmergency = emergency.declaredAt;
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => _runEmergencyEvacuation(p));
+        }
+
         return Scaffold(
           appBar: AppBar(
-            title: _DistrictTitle(
-              provider: p,
-              onSelect: (id) => _selectDistrict(p, id),
-            ),
-            actions: [
-              if (p.isOffline)
-                const Padding(
-                  padding: EdgeInsets.only(right: 4),
-                  child: Tooltip(
-                    message: 'Showing saved offline map',
-                    child: Icon(Icons.cloud_off, size: 20),
+            backgroundColor: emergency.active ? AppTheme.alertRed : null,
+            foregroundColor: emergency.active ? Colors.white : null,
+            title: emergency.active
+                ? const Text('TSUNAMI WARNING')
+                : _DistrictTitle(
+                    provider: p,
+                    onSelect: (id) => _selectDistrict(p, id),
                   ),
-                ),
-              _LayerMenu(provider: p),
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                tooltip: 'Refresh data',
-                onPressed: () => p.refresh(),
-              ),
-            ],
+            actions: emergency.active
+                ? null
+                : [
+                    if (p.isOffline)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 4),
+                        child: Tooltip(
+                          message: 'Showing saved offline map',
+                          child: Icon(Icons.cloud_off, size: 20),
+                        ),
+                      ),
+                    _LayerMenu(provider: p),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      tooltip: 'Refresh data',
+                      onPressed: () => p.refresh(),
+                    ),
+                  ],
           ),
           body: Stack(
             children: [
               _buildMap(context, p, data),
-              if (p.isOffline) const _OfflineBanner(),
-              Positioned(top: 12, left: 12, child: _Legend(provider: p)),
+              if (emergency.active)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _EmergencyBanner(
+                    emergency: emergency,
+                    location: _gpsLocation,
+                    route: p.route,
+                    onStandDown: () =>
+                        context.read<EmergencyProvider>().standDown(),
+                  ),
+                ),
+              if (p.isOffline && !emergency.active) const _OfflineBanner(),
+              if (!emergency.active)
+                Positioned(top: 12, left: 12, child: _Legend(provider: p)),
               // controls (compass + my location) sit above the route panel,
               // right-aligned, so they never cover the route details
               Positioned(
@@ -454,6 +518,109 @@ class _OfflineBanner extends StatelessWidget {
           ),
         ),
       );
+}
+
+/// Red emergency banner with a live wave-arrival countdown and route guidance.
+class _EmergencyBanner extends StatefulWidget {
+  final EmergencyProvider emergency;
+  final LatLng? location;
+  final EvacuationRoute? route;
+  final VoidCallback onStandDown;
+  const _EmergencyBanner({
+    required this.emergency,
+    required this.location,
+    required this.route,
+    required this.onStandDown,
+  });
+
+  @override
+  State<_EmergencyBanner> createState() => _EmergencyBannerState();
+}
+
+class _EmergencyBannerState extends State<_EmergencyBanner> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _fmt(int s) {
+    final r = s.clamp(0, 99 * 60 + 59);
+    return '${(r ~/ 60).toString().padLeft(2, '0')}:'
+        '${(r % 60).toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = widget.location;
+    final route = widget.route;
+    final remaining =
+        loc != null ? widget.emergency.secondsRemaining(loc) : null;
+    final walkSec =
+        (route?.found ?? false) ? widget.route!.walkMinutes * 60 : null;
+    final tooLate = remaining != null && walkSec != null && remaining < walkSec;
+
+    return Material(
+      color: AppTheme.alertRed,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 8, 4, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: loc == null
+                      ? const Text('Locating you…',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold))
+                      : Text('Wave arrives in  ${_fmt(remaining ?? 0)}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                ),
+                TextButton(
+                  onPressed: widget.onStandDown,
+                  child: const Text('End drill',
+                      style: TextStyle(color: Colors.white70)),
+                ),
+              ],
+            ),
+            if (loc != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                route != null && route.found
+                    ? (tooLate
+                        ? 'You may not reach ${route.shelterName ?? 'the shelter'} in time. '
+                            'Move to the nearest high ground immediately.'
+                        : 'Follow the route to ${route.shelterName ?? 'the nearest shelter'} — '
+                            '${route.distanceM} m, about ${route.walkMinutes} min on foot.')
+                    : 'Move inland and uphill, away from the coast.',
+                style: TextStyle(
+                    color: tooLate ? Colors.yellowAccent : Colors.white,
+                    fontWeight: tooLate ? FontWeight.bold : FontWeight.normal),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// App-bar district picker (Galle / Matara / Tangalle).

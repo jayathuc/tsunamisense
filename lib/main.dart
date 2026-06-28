@@ -9,6 +9,7 @@ import 'providers/lesson_provider.dart';
 import 'providers/checklist_provider.dart';
 import 'providers/safe_zone_provider.dart';
 import 'providers/getra_provider.dart';
+import 'providers/emergency_provider.dart';
 import 'providers/theme_provider.dart';
 import 'presentation/screens/home/home_screen.dart';
 import 'presentation/screens/learn/learn_screen.dart';
@@ -35,6 +36,7 @@ class TsunamiSenseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChecklistProvider()),
         ChangeNotifierProvider(create: (_) => SafeZoneProvider()),
         ChangeNotifierProvider(create: (_) => GetraProvider()),
+        ChangeNotifierProvider(create: (_) => EmergencyProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: Consumer<ThemeProvider>(
@@ -94,6 +96,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Auto-switch to the Map tab the moment an emergency is declared.
+    final emergency = context.watch<EmergencyProvider>();
+    if (emergency.active && _currentIndex != 2) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted &&
+            context.read<EmergencyProvider>().active &&
+            _currentIndex != 2) {
+          setState(() => _currentIndex = 2);
+        }
+      });
+    }
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,

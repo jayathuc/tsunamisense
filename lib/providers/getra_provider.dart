@@ -191,14 +191,18 @@ class GetraProvider extends ChangeNotifier {
   }
 
   /// Compute the evacuation route from an origin using the active strategy.
-  void computeRoute(double lat, double lng) {
+  /// In an emergency we force the safest strategy and DMC-verified shelters only.
+  void computeRoute(double lat, double lng, {bool emergencyDmcOnly = false}) {
     _lastLat = lat;
     _lastLng = lng;
     final d = _data;
     if (d == null) return;
+    if (emergencyDmcOnly) _strategy = RouteStrategy.safest;
+    final lit = emergencyDmcOnly ? false : _showLiteratureShelters;
+    final osm = emergencyDmcOnly ? false : _showOsmShelters;
     _route = d.hasRouting
         ? d.traceOffline(lat, lng, _strategy,
-            includeLiterature: _showLiteratureShelters, includeOsm: _showOsmShelters)
+            includeLiterature: lit, includeOsm: osm)
         : EvacuationRoute.failsafe(
             _strategy,
             'Routing for ${d.district.name} is coming soon. For now, move '
