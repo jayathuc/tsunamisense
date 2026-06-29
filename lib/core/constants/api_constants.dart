@@ -15,7 +15,7 @@ class ApiConstants {
         '&minlatitude=-10'
         '&maxlatitude=30'
         '&minlongitude=50'
-        '&maxlongitude=100'
+        '&maxlongitude=105'
         '&orderby=time'
         '&limit=$limit';
   }
@@ -35,14 +35,21 @@ class ApiConstants {
   // Tsunami.gov (NOAA)
   static const String tsunamiGovUrl = 'https://www.tsunami.gov/';
 
-  // OpenStreetMap Tiles
-  static const String osmTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  
-  // Alternative tile providers (free)
-  static const String cartoLightTileUrl = 
-      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-  static const String cartoDarkTileUrl = 
-      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  // Basemap tiles.
+  // Primary: Carto basemaps, served via the Fastly CDN with rotating subdomains
+  // (a–d). A CDN with many anycast IPs is far less likely to be blocked or
+  // unresolvable on a restrictive Wi‑Fi network than the single OpenStreetMap
+  // tile host, which is the usual cause of "map loads on mobile data but not
+  // Wi‑Fi". OSM is kept only as a last-resort fallback.
+  static const List<String> tileSubdomains = ['a', 'b', 'c', 'd'];
+  static const String cartoLightTileUrl =
+      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+  static const String cartoDarkTileUrl =
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
+
+  // Fallback: standard OpenStreetMap tiles (single host, no subdomain).
+  static const String osmTileUrl =
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   // Firebase (to be configured)
   // These will be set up when Firebase project is created

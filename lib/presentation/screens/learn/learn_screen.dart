@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../providers/lesson_provider.dart';
 import '../../../data/models/lesson.dart';
 
@@ -11,9 +12,10 @@ class LearnScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Learn'),
+        title: Text(l.navLearn),
         actions: [
           Consumer<LessonProvider>(
             builder: (context, provider, child) {
@@ -21,7 +23,8 @@ class LearnScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 16),
                 child: Center(
                   child: Text(
-                    '${provider.completedCount}/${provider.totalCount} completed',
+                    l.learnCompletedCount(
+                        provider.completedCount, provider.totalCount),
                     style: const TextStyle(fontSize: 14),
                   ),
                 ),
@@ -37,8 +40,8 @@ class LearnScreen extends StatelessWidget {
           }
 
           if (provider.lessons.isEmpty) {
-            return const Center(
-              child: Text('No lessons available'),
+            return Center(
+              child: Text(l.learnNoLessons),
             );
           }
 
@@ -53,7 +56,7 @@ class LearnScreen extends StatelessWidget {
 
                 // Lessons List
                 Text(
-                  'Lessons',
+                  l.learnLessons,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 12),
@@ -70,6 +73,7 @@ class LearnScreen extends StatelessWidget {
   }
 
   Widget _buildProgressCard(BuildContext context, LessonProvider provider) {
+    final l = AppLocalizations.of(context);
     final progress = provider.completionPercentage;
 
     return Card(
@@ -99,12 +103,12 @@ class LearnScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Your Learning Progress',
+                        l.learnProgressTitle,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${(progress * 100).toInt()}% Complete',
+                        l.learnPercentComplete((progress * 100).toInt()),
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: AppTheme.primaryBlue,
                           fontWeight: FontWeight.bold,
@@ -128,9 +132,7 @@ class LearnScreen extends StatelessWidget {
             if (progress < 1.0) ...[
               const SizedBox(height: 12),
               Text(
-                progress == 0
-                    ? 'Start your first lesson to learn how to stay safe!'
-                    : 'Keep going! You\'re doing great!',
+                progress == 0 ? l.learnStartPrompt : l.learnKeepGoing,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ] else ...[
@@ -139,10 +141,12 @@ class LearnScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.check_circle, color: AppTheme.alertGreen),
                   const SizedBox(width: 8),
-                  Text(
-                    'All lessons completed! You\'re well prepared.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.alertGreen,
+                  Expanded(
+                    child: Text(
+                      l.learnAllDone,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.alertGreen,
+                      ),
                     ),
                   ),
                 ],
@@ -175,6 +179,7 @@ class _LessonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -235,7 +240,7 @@ class _LessonCard extends StatelessWidget {
                         const Icon(Icons.access_time, size: 14, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
                         Text(
-                          '${lesson.estimatedMinutes} min',
+                          l.learnMinutes(lesson.estimatedMinutes),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppTheme.textSecondary,
                           ),
@@ -245,7 +250,7 @@ class _LessonCard extends StatelessWidget {
                           const Icon(Icons.quiz, size: 14, color: AppTheme.textSecondary),
                           const SizedBox(width: 4),
                           Text(
-                            'Quiz',
+                            l.learnQuiz,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: AppTheme.textSecondary,
                             ),
@@ -286,7 +291,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lesson ${widget.lesson.order}'),
+        title: Text(AppLocalizations.of(context).learnLessonNumber(widget.lesson.order)),
       ),
       body: _showQuiz ? _buildQuiz() : _buildContent(),
       bottomNavigationBar: _showQuiz ? null : _buildBottomBar(),
@@ -309,7 +314,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
               const Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
               const SizedBox(width: 4),
               Text(
-                '${widget.lesson.estimatedMinutes} min read',
+                AppLocalizations.of(context)
+                    .learnMinRead(widget.lesson.estimatedMinutes),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -430,6 +436,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   Widget _buildBottomBar() {
+    final l = AppLocalizations.of(context);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -443,7 +450,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                       _showQuiz = true;
                     });
                   },
-                  child: const Text('Take Quiz'),
+                  child: Text(l.learnTakeQuiz),
                 ),
               )
             else
@@ -451,8 +458,8 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 child: ElevatedButton(
                   onPressed: () => _completeLesson(),
                   child: Text(widget.lesson.isCompleted
-                      ? 'Completed ✓'
-                      : 'Mark as Complete'),
+                      ? l.learnCompleted
+                      : l.learnMarkComplete),
                 ),
               ),
           ],
@@ -468,6 +475,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     }
 
     final question = quiz[_currentQuizIndex];
+    final l = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.all(AppConstants.defaultPadding),
@@ -481,7 +489,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Question ${_currentQuizIndex + 1} of ${quiz.length}',
+            l.learnQuestionOf(_currentQuizIndex + 1, quiz.length),
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 24),
@@ -583,7 +591,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     _selectedAnswer = null;
                   });
                 },
-                child: Text(_currentQuizIndex < quiz.length - 1 ? 'Next' : 'See Results'),
+                child: Text(_currentQuizIndex < quiz.length - 1
+                    ? l.commonNext
+                    : l.learnSeeResults),
               ),
             ),
         ],
@@ -592,6 +602,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   Widget _buildQuizResults() {
+    final l = AppLocalizations.of(context);
     final total = widget.lesson.quiz!.length;
     final percentage = (_correctAnswers / total * 100).toInt();
     final passed = percentage >= 70;
@@ -609,19 +620,20 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              passed ? 'Great Job!' : 'Keep Learning',
+              passed ? l.learnGreatJob : l.learnKeepLearning,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'You got $_correctAnswers out of $total correct ($percentage%)',
+              l.learnScore(_correctAnswers, total, percentage),
               style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
             if (passed)
               ElevatedButton(
                 onPressed: () => _completeLesson(),
-                child: const Text('Complete Lesson'),
+                child: Text(l.learnCompleteLesson),
               )
             else
               OutlinedButton(
@@ -633,7 +645,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                     _selectedAnswer = null;
                   });
                 },
-                child: const Text('Review Lesson'),
+                child: Text(l.learnReviewLesson),
               ),
           ],
         ),
@@ -642,11 +654,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
   }
 
   void _completeLesson() {
+    final l = AppLocalizations.of(context);
     context.read<LessonProvider>().markLessonCompleted(widget.lesson.id);
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Lesson "${widget.lesson.title}" completed!'),
+        content: Text(l.learnLessonDoneToast),
         backgroundColor: AppTheme.alertGreen,
       ),
     );

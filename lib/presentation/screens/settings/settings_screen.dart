@@ -5,9 +5,15 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/utils/district_name.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../providers/theme_provider.dart';
 import '../../../providers/checklist_provider.dart';
 import '../../../providers/getra_provider.dart';
+import '../../../providers/app_settings_provider.dart';
+import '../../../providers/locale_provider.dart';
+import '../../../data/services/notification_service.dart';
+import '../../../data/services/tile_prefetch_service.dart';
 
 /// Settings screen - App settings and preferences
 class SettingsScreen extends StatefulWidget {
@@ -24,9 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _vibrationEnabled = true;
   bool _showAllEarthquakes = false;
   double _alertRadius = 500; // km
-  String _language = 'English';
   bool _darkMode = false;
-  bool _offlineMode = false;
 
   @override
   void initState() {
@@ -42,9 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _vibrationEnabled = prefs.getBool('vibration_enabled') ?? true;
       _showAllEarthquakes = prefs.getBool('show_all_earthquakes') ?? false;
       _alertRadius = prefs.getDouble('alert_radius') ?? 500;
-      _language = prefs.getString('language') ?? 'English';
       _darkMode = prefs.getBool('dark_mode') ?? false;
-      _offlineMode = prefs.getBool('offline_mode') ?? false;
     });
   }
 
@@ -61,40 +63,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l.settingsTitle),
       ),
       body: ListView(
         children: [
           // Notification Settings
-          _SectionHeader(title: 'Notifications'),
+          _SectionHeader(title: l.sectionNotifications),
           SwitchListTile(
-            title: const Text('Enable Notifications'),
-            subtitle: const Text('Receive earthquake and tsunami alerts'),
+            title: Text(l.enableNotifications),
+            subtitle: Text(l.enableNotificationsSubtitle),
             value: _notificationsEnabled,
-            onChanged: (value) {
+            onChanged: (value) async {
               setState(() => _notificationsEnabled = value);
-              _saveSetting('notifications_enabled', value);
+              await _saveSetting('notifications_enabled', value);
+              await NotificationService.refreshPrefs();
             },
           ),
           if (_notificationsEnabled) ...[
             SwitchListTile(
-              title: const Text('Sound'),
-              subtitle: const Text('Play alert sound for notifications'),
+              title: Text(l.soundLabel),
+              subtitle: Text(l.soundSubtitle),
               value: _soundEnabled,
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() => _soundEnabled = value);
-                _saveSetting('sound_enabled', value);
+                await _saveSetting('sound_enabled', value);
+                await NotificationService.refreshPrefs();
               },
             ),
             SwitchListTile(
-              title: const Text('Vibration'),
-              subtitle: const Text('Vibrate for notifications'),
+              title: Text(l.vibrationLabel),
+              subtitle: Text(l.vibrationSubtitle),
               value: _vibrationEnabled,
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() => _vibrationEnabled = value);
-                _saveSetting('vibration_enabled', value);
+                await _saveSetting('vibration_enabled', value);
+                await NotificationService.refreshPrefs();
               },
             ),
           ],
@@ -102,10 +108,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Alert Settings
-          _SectionHeader(title: 'Alert Settings'),
+          _SectionHeader(title: l.sectionAlertSettings),
           ListTile(
-            title: const Text('Alert Radius'),
-            subtitle: Text('${_alertRadius.toInt()} km from Sri Lanka coast'),
+            title: Text(l.alertRadius),
+            subtitle: Text(l.alertRadiusValue(_alertRadius.toInt())),
             trailing: SizedBox(
               width: 150,
               child: Slider(
@@ -122,34 +128,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           SwitchListTile(
-            title: const Text('Show All Earthquakes'),
-            subtitle: const Text('Include earthquakes below M5.0'),
+            title: Text(l.showAllEarthquakes),
+            subtitle: Text(l.showAllEarthquakesSubtitle),
             value: _showAllEarthquakes,
             onChanged: (value) {
               setState(() => _showAllEarthquakes = value);
               _saveSetting('show_all_earthquakes', value);
             },
           ),
-          ListTile(
-            title: const Text('Test Alert'),
-            subtitle: const Text('Send a test notification'),
-            trailing: const Icon(Icons.notifications_active),
-            onTap: _sendTestAlert,
-          ),
+          if (context.watch<AppSettingsProvider>().developerMode)
+            ListTile(
+              title: Text(l.testAlert),
+              subtitle: Text(l.testAlertSubtitle),
+              trailing: const Icon(Icons.notifications_active),
+              onTap: _sendTestAlert,
+            ),
 
           const Divider(),
 
           // Display Settings
-          _SectionHeader(title: 'Display'),
+          _SectionHeader(title: l.sectionDisplay),
           ListTile(
-            title: const Text('Language'),
-            subtitle: Text(_language),
+            title: Text(l.language),
+            subtitle: Text(LocaleProvider.displayName(
+                context.watch<LocaleProvider>().languageCode)),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showLanguageDialog(),
+            onTap: () => _showLanguageDialog(context),
           ),
           SwitchListTile(
-            title: const Text('Dark Mode'),
-            subtitle: const Text('Use dark theme'),
+            title: Text(l.darkMode),
+            subtitle: Text(l.darkModeSubtitle),
             value: _darkMode,
             onChanged: (value) {
               setState(() => _darkMode = value);
@@ -160,25 +168,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Evacuation Map
-          _SectionHeader(title: 'Evacuation Map'),
+          _SectionHeader(title: l.sectionEvacuationMap),
           SwitchListTile(
-            title: const Text('Show research-supported shelters'),
-            subtitle: const Text(
-              'Also show last-resort shelters identified in published '
-              'research. DMC-verified shelters are always shown.',
-            ),
+            title: Text(l.showResearchShelters),
+            subtitle: Text(l.showResearchSheltersSubtitle),
             secondary: const Icon(Icons.menu_book_outlined),
             value: context.watch<GetraProvider>().showLiteratureShelters,
             onChanged: (value) =>
                 context.read<GetraProvider>().setShowLiteratureShelters(value),
           ),
           SwitchListTile(
-            title: const Text('Show OpenStreetMap shelters'),
-            subtitle: const Text(
-              'Auto-identified public buildings (schools, temples, hospitals) '
-              'on high ground. Unverified — enables routing for Matara and '
-              'Tangalle.',
-            ),
+            title: Text(l.showOsmShelters),
+            subtitle: Text(l.showOsmSheltersSubtitle),
             secondary: const Icon(Icons.public),
             value: context.watch<GetraProvider>().showOsmShelters,
             onChanged: (value) =>
@@ -188,53 +189,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Data & Storage
-          _SectionHeader(title: 'Data & Storage'),
-          SwitchListTile(
-            title: const Text('Offline Mode'),
-            subtitle: const Text('Download maps for offline use'),
-            value: _offlineMode,
-            onChanged: (value) {
-              setState(() => _offlineMode = value);
-              _saveSetting('offline_mode', value);
-              if (value) {
-                _downloadOfflineData();
-              }
-            },
+          _SectionHeader(title: l.sectionDataStorage),
+          ListTile(
+            title: Text(l.offlineMode),
+            subtitle: Text(l.offlineModeSubtitle),
+            trailing: const Icon(Icons.download_for_offline_outlined),
+            onTap: _downloadOfflineData,
           ),
           ListTile(
-            title: const Text('Clear Cache'),
-            subtitle: const Text('Free up storage space'),
+            title: Text(l.clearCache),
+            subtitle: Text(l.clearCacheSubtitle),
             trailing: const Icon(Icons.delete_outline),
             onTap: _clearCache,
           ),
           ListTile(
-            title: const Text('Export Data'),
-            subtitle: const Text('Export checklist and progress'),
+            title: Text(l.exportData),
+            subtitle: Text(l.exportDataSubtitle),
             trailing: const Icon(Icons.download),
             onTap: _exportData,
           ),
 
           const Divider(),
 
+          // Developer
+          _SectionHeader(title: l.sectionDeveloper),
+          SwitchListTile(
+            title: Text(l.developerMode),
+            subtitle: Text(l.developerModeSubtitle),
+            secondary: const Icon(Icons.developer_mode),
+            value: context.watch<AppSettingsProvider>().developerMode,
+            onChanged: (v) =>
+                context.read<AppSettingsProvider>().setDeveloperMode(v),
+          ),
+
+          const Divider(),
+
           // About Section
-          _SectionHeader(title: 'About'),
+          _SectionHeader(title: l.sectionAbout),
           ListTile(
-            title: const Text('About TsunamiSense'),
+            title: Text(l.aboutTsunamiSense),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showAboutDialog(context),
           ),
           ListTile(
-            title: const Text('Privacy Policy'),
+            title: Text(l.privacyPolicy),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showPrivacyPolicy(),
           ),
           ListTile(
-            title: const Text('Terms of Service'),
+            title: Text(l.termsOfService),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showTermsOfService(),
           ),
           ListTile(
-            title: const Text('Open Source Licenses'),
+            title: Text(l.openSourceLicenses),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _showLicenses(context),
           ),
@@ -242,24 +250,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
 
           // Emergency Contacts
-          _SectionHeader(title: 'Emergency Contacts'),
+          _SectionHeader(title: l.sectionEmergencyContacts),
           _EmergencyContactTile(
-            title: 'National Disaster Management',
+            title: l.contactNationalDisaster,
             number: '117',
             icon: Icons.local_police,
           ),
           _EmergencyContactTile(
-            title: 'Police Emergency',
+            title: l.contactPolice,
             number: '119',
             icon: Icons.security,
           ),
           _EmergencyContactTile(
-            title: 'Ambulance Service',
+            title: l.contactAmbulance,
             number: '1990',
             icon: Icons.local_hospital,
           ),
           _EmergencyContactTile(
-            title: 'Fire & Rescue',
+            title: l.contactFire,
             number: '110',
             icon: Icons.local_fire_department,
           ),
@@ -300,105 +308,142 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _sendTestAlert() {
+    final l = AppLocalizations.of(context);
+    NotificationService.show('TsunamiSense', l.testAlertSubtitle);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: const [
-            Icon(Icons.notifications, color: Colors.white),
-            SizedBox(width: 12),
-            Text('Test alert sent!'),
-          ],
-        ),
-        backgroundColor: AppTheme.primaryBlue,
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(l.testNotificationSent)),
     );
-    // TODO: Implement actual test notification using local_notifications
   }
 
-  void _showLanguageDialog() {
+  void _showLanguageDialog(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final localeProvider = context.read<LocaleProvider>();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Language'),
+      builder: (ctx) => AlertDialog(
+        title: Text(l.selectLanguage),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            _LanguageOption(
-              language: 'English',
-              isSelected: _language == 'English',
-              onSelect: () {
-                setState(() => _language = 'English');
-                _saveSetting('language', 'English');
-                Navigator.pop(context);
+          children: LocaleProvider.supported.map((loc) {
+            final selected =
+                localeProvider.languageCode == loc.languageCode;
+            return ListTile(
+              title: Text(LocaleProvider.displayName(loc.languageCode)),
+              trailing: selected
+                  ? const Icon(Icons.check, color: AppTheme.primaryBlue)
+                  : null,
+              onTap: () {
+                localeProvider.setLocale(loc);
+                Navigator.pop(ctx);
               },
-            ),
-            _LanguageOption(
-              language: 'Sinhala (සිංහල)',
-              isSelected: _language == 'Sinhala',
-              onSelect: () {
-                setState(() => _language = 'Sinhala');
-                _saveSetting('language', 'Sinhala');
-                Navigator.pop(context);
-              },
-            ),
-            _LanguageOption(
-              language: 'Tamil (தமிழ்)',
-              isSelected: _language == 'Tamil',
-              onSelect: () {
-                setState(() => _language = 'Tamil');
-                _saveSetting('language', 'Tamil');
-                Navigator.pop(context);
-              },
-            ),
-          ],
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  void _downloadOfflineData() {
-    showDialog(
+  Future<void> _downloadOfflineData() async {
+    final l = AppLocalizations.of(context);
+    final district = context.read<GetraProvider>().selected;
+    if (district == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.offlineDownloadFailed)),
+      );
+      return;
+    }
+
+    final districtName = localizedDistrictName(l, district.id, district.name);
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Offline Map Tiles'),
-        content: const Text(
-          'Automatic tile caching is not yet implemented.\n\n'
-          'Map tiles are cached automatically as you browse the map. '
-          'Zoom into areas you want available offline, and the tiles '
-          'will be stored by the OS network cache.',
+      builder: (ctx) => AlertDialog(
+        title: Text(l.offlineDownloadTitle),
+        content: Text(l.offlineDownloadBody(districtName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.commonCancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.offlineDownloadStart),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final service = TilePrefetchService();
+    final progress = ValueNotifier<int>(0);
+    final total = TilePrefetchService.estimateCount(district.bbox);
+    var cancelledByUser = false;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.offlineDownloading),
+        content: ValueListenableBuilder<int>(
+          valueListenable: progress,
+          builder: (_, done, __) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LinearProgressIndicator(value: total == 0 ? null : done / total),
+              const SizedBox(height: 12),
+              Text(l.offlineDownloadProgress(done, total)),
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              setState(() => _offlineMode = false);
-              _saveSetting('offline_mode', false);
+              cancelledByUser = true;
+              service.cancel();
+              Navigator.pop(ctx);
             },
-            child: const Text('OK'),
+            child: Text(l.commonCancel),
           ),
         ],
+      ),
+    );
+
+    final completed = await service.prefetch(
+      district.bbox,
+      headers: const {
+        'User-Agent': 'TsunamiSense/1.0 (tsunami evacuation app)',
+      },
+      onProgress: (done, _) => progress.value = done,
+    );
+
+    if (!cancelledByUser && mounted) {
+      Navigator.of(context, rootNavigator: true).pop(); // close progress dialog
+    }
+    progress.dispose();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(completed
+            ? l.offlineDownloadDone(districtName)
+            : l.offlineDownloadFailed),
       ),
     );
   }
 
   void _clearCache() async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear Cache?'),
-        content: const Text(
-          'This will remove cached map tiles and data. '
-          'You may need to re-download them for offline use.',
-        ),
+      builder: (ctx) => AlertDialog(
+        title: Text(l.clearCacheTitle),
+        content: Text(l.clearCacheBody),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.commonCancel),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Clear'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.commonClear),
           ),
         ],
       ),
@@ -409,8 +454,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // Preserve user settings; remove only cached app data
       final keysToKeep = {
         'notifications_enabled', 'sound_enabled', 'vibration_enabled',
-        'show_all_earthquakes', 'alert_radius', 'language', 'dark_mode',
-        'offline_mode', 'checklist_data',
+        'show_all_earthquakes', 'alert_radius', 'locale_code', 'dark_mode',
+        'offline_mode', 'checklist_data', 'developer_mode',
+        'show_literature_shelters', 'show_osm_shelters',
       };
       final allKeys = prefs.getKeys();
       for (final key in allKeys) {
@@ -420,7 +466,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cache cleared successfully')),
+          SnackBar(content: Text(l.cacheCleared)),
         );
       }
     }
@@ -626,29 +672,6 @@ class _SectionHeader extends StatelessWidget {
           fontSize: 14,
         ),
       ),
-    );
-  }
-}
-
-class _LanguageOption extends StatelessWidget {
-  final String language;
-  final bool isSelected;
-  final VoidCallback onSelect;
-
-  const _LanguageOption({
-    required this.language,
-    required this.isSelected,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(language),
-      trailing: isSelected
-          ? Icon(Icons.check, color: AppTheme.primaryBlue)
-          : null,
-      onTap: onSelect,
     );
   }
 }

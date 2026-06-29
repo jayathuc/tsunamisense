@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../providers/checklist_provider.dart';
 import '../../../data/models/checklist.dart';
 import '../../../core/theme/app_theme.dart';
@@ -14,30 +15,26 @@ class PrepareScreen extends StatefulWidget {
 }
 
 class _PrepareScreenState extends State<PrepareScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Load checklist on first build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ChecklistProvider>().loadChecklist();
-    });
-  }
+  // The checklist is loaded (and reloaded on language change) from
+  // MainNavigationScreen with the active locale, so we do not load it here;
+  // doing so would force it back to the default language.
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Prepare'),
+        title: Text(l.prepareTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.restart_alt),
             onPressed: () => _showResetDialog(context),
-            tooltip: 'Reset checklist',
+            tooltip: l.prepareResetTooltip,
           ),
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: () => _shareChecklist(context),
-            tooltip: 'Share checklist',
+            tooltip: l.prepareShareTooltip,
           ),
         ],
       ),
@@ -95,33 +92,32 @@ class _PrepareScreenState extends State<PrepareScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddItemDialog(context),
         icon: const Icon(Icons.add),
-        label: const Text('Add Item'),
+        label: Text(l.prepareAddItem),
       ),
     );
   }
 
   void _showResetDialog(BuildContext context) {
+    final l = AppLocalizations.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reset Checklist?'),
-        content: const Text(
-          'This will uncheck all items. Your notes will be preserved.',
-        ),
+      builder: (ctx) => AlertDialog(
+        title: Text(l.prepareResetTitle),
+        content: Text(l.prepareResetBody),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
               context.read<ChecklistProvider>().resetChecklist();
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Checklist reset')),
+                SnackBar(content: Text(l.prepareResetDone)),
               );
             },
-            child: const Text('Reset'),
+            child: Text(l.commonReset),
           ),
         ],
       ),
@@ -157,21 +153,22 @@ class _PrepareScreenState extends State<PrepareScreen> {
   }
 
   void _showAddItemDialog(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final provider = context.read<ChecklistProvider>();
     String? selectedCategory;
     final nameController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Custom Item'),
+      builder: (ctx) => AlertDialog(
+        title: Text(l.prepareAddCustomTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l.prepareCategory,
+                border: const OutlineInputBorder(),
               ),
               items: provider.categories.map((c) {
                 return DropdownMenuItem(
@@ -186,29 +183,29 @@ class _PrepareScreenState extends State<PrepareScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Item name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l.prepareItemName,
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
               if (selectedCategory != null && nameController.text.isNotEmpty) {
                 provider.addCustomItem(selectedCategory!, nameController.text);
-                Navigator.pop(context);
+                Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Item added')),
+                  SnackBar(content: Text(l.prepareItemAdded)),
                 );
               }
             },
-            child: const Text('Add'),
+            child: Text(l.commonAdd),
           ),
         ],
       ),
@@ -229,6 +226,7 @@ class _ProgressHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final isComplete = percentage >= 1.0;
 
     return Container(
@@ -291,8 +289,8 @@ class _ProgressHeader extends StatelessWidget {
                   children: [
                     Text(
                       isComplete
-                          ? '🎉 Fully Prepared!'
-                          : 'Preparedness Level',
+                          ? l.prepareFullyPrepared
+                          : l.preparePreparednessLevel,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -302,8 +300,8 @@ class _ProgressHeader extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       isComplete
-                          ? 'Great job! You have everything ready for an emergency.'
-                          : 'Complete the checklist to ensure you\'re ready for emergencies.',
+                          ? l.prepareCompleteMsg
+                          : l.prepareIncompleteMsg,
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
                         fontSize: 14,
@@ -406,7 +404,9 @@ class _CategoryCardState extends State<_CategoryCard> {
                           ),
                         ),
                         const SizedBox(height: 5),
-                        Text('$completedCount of $totalCount complete',
+                        Text(
+                            AppLocalizations.of(context)
+                                .prepareItemsComplete(completedCount, totalCount),
                             style: Theme.of(context).textTheme.bodySmall),
                       ],
                     ),
@@ -535,8 +535,8 @@ class _ChecklistItemTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  'Required',
-                  style: TextStyle(
+                  AppLocalizations.of(context).prepareRequired,
+                  style: const TextStyle(
                     fontSize: 10,
                     color: AppTheme.alertRed,
                     fontWeight: FontWeight.bold,
@@ -550,7 +550,7 @@ class _ChecklistItemTile extends StatelessWidget {
                 color: item.note != null ? Colors.amber : Colors.grey,
               ),
               onPressed: () => _showNoteDialog(context),
-              tooltip: 'Add note',
+              tooltip: AppLocalizations.of(context).prepareNoteTitle,
             ),
           ],
         ),
@@ -559,17 +559,18 @@ class _ChecklistItemTile extends StatelessWidget {
   }
 
   void _showNoteDialog(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final controller = TextEditingController(text: item.note);
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Note for "${item.name}"'),
+      builder: (ctx) => AlertDialog(
+        title: Text(l.prepareNoteTitle),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'Add a note (e.g., location, expiry date)',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: l.prepareNoteHint,
+            border: const OutlineInputBorder(),
           ),
           maxLines: 3,
         ),
@@ -578,20 +579,20 @@ class _ChecklistItemTile extends StatelessWidget {
             TextButton(
               onPressed: () {
                 onNoteUpdate(null);
-                Navigator.pop(context);
+                Navigator.pop(ctx);
               },
-              child: const Text('Remove'),
+              child: Text(l.commonRemove),
             ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l.commonCancel),
           ),
           ElevatedButton(
             onPressed: () {
               onNoteUpdate(controller.text.isEmpty ? null : controller.text);
-              Navigator.pop(context);
+              Navigator.pop(ctx);
             },
-            child: const Text('Save'),
+            child: Text(l.commonSave),
           ),
         ],
       ),
@@ -604,6 +605,7 @@ class _TipsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -619,9 +621,9 @@ class _TipsSection extends StatelessWidget {
             children: [
               Icon(Icons.lightbulb, color: Colors.amber[700]),
               const SizedBox(width: 8),
-              const Text(
-                'Preparation Tips',
-                style: TextStyle(
+              Text(
+                l.prepareTipsTitle,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -629,45 +631,30 @@ class _TipsSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _tipItem(
-            '🔄 Regular Updates',
-            'Review and update your emergency kit every 6 months.',
-          ),
-          _tipItem(
-            '💧 Water Storage',
-            'Store 1 gallon of water per person per day for at least 3 days.',
-          ),
-          _tipItem(
-            '📱 Emergency Contacts',
-            'Keep a written list of emergency contacts in your kit.',
-          ),
-          _tipItem(
-            '🏠 Family Plan',
-            'Discuss and practice evacuation routes with your family.',
-          ),
-          _tipItem(
-            '📍 Meeting Point',
-            'Designate a meeting point in case family members are separated.',
-          ),
+          _tipItem('🔄', l.prepareTip1Title, l.prepareTip1Body),
+          _tipItem('💧', l.prepareTip2Title, l.prepareTip2Body),
+          _tipItem('📱', l.prepareTip3Title, l.prepareTip3Body),
+          _tipItem('🏠', l.prepareTip4Title, l.prepareTip4Body),
+          _tipItem('📍', l.prepareTip5Title, l.prepareTip5Body),
         ],
       ),
     );
   }
 
-  Widget _tipItem(String title, String description) {
+  Widget _tipItem(String emoji, String title, String description) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title.split(' ')[0]),
+          Text(emoji),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title.substring(title.indexOf(' ') + 1),
+                  title,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Text(

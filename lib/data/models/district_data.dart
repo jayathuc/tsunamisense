@@ -80,7 +80,13 @@ class DistrictData {
       if (literature) 'literature',
       if (osm) 'osm',
     };
-    final sel = enabled.intersection(availableSources).toList()..sort();
+    var sel = enabled.intersection(availableSources).toList()..sort();
+    if (sel.isEmpty) {
+      // The district has none of the enabled sources (e.g. Matara and Tangalle
+      // have only OSM shelters, with that toggle off by default). Fall back to
+      // every source the district does have, so it still routes out of the box.
+      sel = availableSources.toList()..sort();
+    }
     return sel.join('+');
   }
 

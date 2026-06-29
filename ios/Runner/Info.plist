@@ -6,6 +6,8 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
 	<string>Tsunamisense App</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>TsunamiSense uses your location to show where you are on the evacuation map and to route you to the nearest safe shelter.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

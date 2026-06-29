@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../core/utils/geo_utils.dart';
+import '../data/services/notification_service.dart';
 
 /// Drives the app's emergency evacuation mode.
 ///
@@ -33,6 +34,11 @@ class EmergencyProvider extends ChangeNotifier {
     _active = true;
     _declaredAt = DateTime.now();
     _source = source ?? pocSource;
+    NotificationService.show(
+      'TSUNAMI WARNING',
+      'Evacuate now. Open the app for your safest route to a shelter.',
+      urgent: true,
+    );
     notifyListeners();
   }
 

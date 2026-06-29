@@ -9,9 +9,12 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/district_name.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../data/models/district_data.dart';
 import '../../../data/models/evacuation_route.dart';
 import '../../../data/models/route_strategy.dart';
+import '../../../data/services/cached_tile_provider.dart';
 import '../../../providers/emergency_provider.dart';
 import '../../../providers/getra_provider.dart';
 
@@ -106,16 +109,27 @@ class _MapScreenState extends State<MapScreen> {
     p.selectDistrict(id);
   }
 
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _useMyLocation(GetraProvider p) async {
+    final l = AppLocalizations.of(context);
     setState(() => _loadingLocation = true);
     try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        _toast(l.locationServicesOff);
+        return;
+      }
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        throw Exception('Location permission denied');
+        _toast(l.locationPermissionDenied);
+        return;
       }
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
@@ -125,11 +139,7 @@ class _MapScreenState extends State<MapScreen> {
       _setOrigin(ll, p, fromGps: true);
       _mapController.move(ll, 15);
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Could not get your location. Tap the map to set a start point.'),
-        ));
-      }
+      _toast(l.locationUnavailable);
     } finally {
       if (mounted) setState(() => _loadingLocation = false);
     }
@@ -146,15 +156,21 @@ class _MapScreenState extends State<MapScreen> {
   /// Emergency flow: locate the user and route to the nearest DMC shelter via
   /// the safest path, automatically (triggered by a tsunami-confirmed alert).
   Future<void> _runEmergencyEvacuation(GetraProvider p) async {
+    final l = AppLocalizations.of(context);
     setState(() => _loadingLocation = true);
     try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        _toast(l.locationServicesOffEmergency);
+        return;
+      }
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        throw Exception('no location permission');
+        _toast(l.locationPermissionDeniedEmergency);
+        return;
       }
       final pos = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
@@ -168,11 +184,7 @@ class _MapScreenState extends State<MapScreen> {
       p.computeRoute(ll.latitude, ll.longitude, emergencyDmcOnly: true);
       _mapController.move(ll, 15);
     } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Enable location to get your evacuation route.'),
-        ));
-      }
+      _toast(l.locationUnavailable);
     } finally {
       if (mounted) setState(() => _loadingLocation = false);
     }
@@ -185,17 +197,18 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Consumer<GetraProvider>(
       builder: (context, p, _) {
         if (p.status == GetraStatus.loading && p.data == null) {
           return _StatusScaffold(
-            child: const _Loading(message: 'Loading evacuation map...'),
+            child: _Loading(message: l.mapLoading),
           );
         }
         if (p.data == null) {
           return _StatusScaffold(
             child: _ErrorView(
-              message: p.error ?? 'Map unavailable.',
+              message: p.error ?? l.mapUnavailable,
               onRetry: () => p.init(),
             ),
           );
@@ -343,8 +356,24 @@ class _MapScreenState extends State<MapScreen> {
       ),
       children: [
         TileLayer(
-          urlTemplate: ApiConstants.osmTileUrl,
+          urlTemplate: Theme.of(context).brightness == Brightness.dark
+              ? ApiConstants.cartoDarkTileUrl
+              : ApiConstants.cartoLightTileUrl,
+          subdomains: ApiConstants.tileSubdomains,
+          // If the CDN is unreachable on a given network, try OSM before the
+          // tile is left blank.
+          fallbackUrl: ApiConstants.osmTileUrl,
           userAgentPackageName: 'com.tsunamisense.app',
+          // Disk-cache tiles and add the cross-server fallback, so the map
+          // still renders on a restrictive Wi‑Fi network or fully offline.
+          tileProvider: CachedTileProvider(
+            // Not const: flutter_map injects its own User-Agent into this map
+            // via putIfAbsent, which throws on an unmodifiable (const) map.
+            headers: {
+              'User-Agent':
+                  'TsunamiSense/1.0 (tsunami evacuation app; +https://huggingface.co/spaces/jayathuc/getra-api)',
+            },
+          ),
         ),
         if (p.showInundation) PolygonLayer(polygons: _floodPolys),
         if (p.showRoads) PolylineLayer(polylines: _roadLines),
@@ -402,10 +431,14 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   MarkerLayer _shelterMarkers(DistrictData data, GetraProvider p) {
+    // Districts with no DMC shelters (Matara, Tangalle) rely on their optional
+    // sources for routing, so show those markers by default even when the global
+    // toggle is off; otherwise the route would end at an invisible shelter.
+    final reliesOnOptional = !data.availableSources.contains('dmc');
     final visible = data.shelters.where((z) {
       final s = (z.source ?? '').toLowerCase();
-      if (s == 'literature') return p.showLiteratureShelters;
-      if (s == 'osm') return p.showOsmShelters;
+      if (s == 'literature') return p.showLiteratureShelters || reliesOnOptional;
+      if (s == 'osm') return p.showOsmShelters || reliesOnOptional;
       return true; // dmc / unknown always shown
     }).toList();
     return MarkerLayer(
@@ -562,6 +595,7 @@ class _EmergencyBannerState extends State<_EmergencyBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final loc = widget.location;
     final route = widget.route;
     final remaining =
@@ -569,6 +603,7 @@ class _EmergencyBannerState extends State<_EmergencyBanner> {
     final walkSec =
         (route?.found ?? false) ? widget.route!.walkMinutes * 60 : null;
     final tooLate = remaining != null && walkSec != null && remaining < walkSec;
+    final shelter = route?.shelterName ?? l.mapNearestShelter;
 
     return Material(
       color: AppTheme.alertRed,
@@ -583,21 +618,31 @@ class _EmergencyBannerState extends State<_EmergencyBanner> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: loc == null
-                      ? const Text('Locating you…',
-                          style: TextStyle(
+                      ? Text(l.emergencyLocating,
+                          style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold))
-                      : Text('Wave arrives in  ${_fmt(remaining ?? 0)}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold)),
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${l.emergencyWaveArrivesIn}  ${_fmt(remaining ?? 0)}',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold)),
+                            // Honest framing: the countdown is a proof-of-concept
+                            // estimate, not an official arrival time.
+                            Text(l.emergencyDemoModel,
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 11)),
+                          ],
+                        ),
                 ),
                 TextButton(
                   onPressed: widget.onStandDown,
-                  child: const Text('End drill',
-                      style: TextStyle(color: Colors.white70)),
+                  child: Text(l.emergencyEndDrill,
+                      style: const TextStyle(color: Colors.white70)),
                 ),
               ],
             ),
@@ -606,11 +651,9 @@ class _EmergencyBannerState extends State<_EmergencyBanner> {
               Text(
                 route != null && route.found
                     ? (tooLate
-                        ? 'You may not reach ${route.shelterName ?? 'the shelter'} in time. '
-                            'Move to the nearest high ground immediately.'
-                        : 'Follow the route to ${route.shelterName ?? 'the nearest shelter'} — '
-                            '${route.distanceM} m, about ${route.walkMinutes} min on foot.')
-                    : 'Move inland and uphill, away from the coast.',
+                        ? l.emergencyMayNotReach(shelter)
+                        : l.emergencyFollowRoute(shelter))
+                    : l.emergencyMoveInland,
                 style: TextStyle(
                     color: tooLate ? Colors.yellowAccent : Colors.white,
                     fontWeight: tooLate ? FontWeight.bold : FontWeight.normal),
@@ -631,12 +674,16 @@ class _DistrictTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final districts = provider.districts;
-    final name = provider.selected?.name ?? 'Evacuation';
-    if (districts.length <= 1) return Text('$name Map');
+    final sel = provider.selected;
+    final name =
+        sel != null ? localizedDistrictName(l, sel.id, sel.name) : null;
+    final title = name != null ? l.mapDistrictTitle(name) : l.mapTitle;
+    if (districts.length <= 1) return Text(title);
 
     return PopupMenuButton<String>(
-      tooltip: 'Switch district',
+      tooltip: l.mapSwitchDistrict,
       onSelected: onSelect,
       itemBuilder: (_) => districts.map((d) {
         final selected = d.id == provider.selected?.id;
@@ -647,7 +694,7 @@ class _DistrictTitle extends StatelessWidget {
               Icon(d.hasRouting ? Icons.alt_route : Icons.map_outlined,
                   size: 18, color: selected ? AppTheme.primaryBlue : null),
               const SizedBox(width: 10),
-              Text(d.name),
+              Text(localizedDistrictName(l, d.id, d.name)),
               if (!d.hasRouting) ...[
                 const SizedBox(width: 8),
                 Container(
@@ -657,8 +704,8 @@ class _DistrictTitle extends StatelessWidget {
                     color: AppTheme.alertOrange.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text('Map only',
-                      style: TextStyle(
+                  child: Text(l.mapMapOnly,
+                      style: const TextStyle(
                           fontSize: 10, color: AppTheme.alertOrange)),
                 ),
               ],
@@ -673,7 +720,7 @@ class _DistrictTitle extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(child: Text('$name Map', overflow: TextOverflow.ellipsis)),
+          Flexible(child: Text(title, overflow: TextOverflow.ellipsis)),
           const Icon(Icons.arrow_drop_down),
         ],
       ),
@@ -686,9 +733,10 @@ class _LayerMenu extends StatelessWidget {
   const _LayerMenu({required this.provider});
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return PopupMenuButton<String>(
       icon: const Icon(Icons.layers),
-      tooltip: 'Map layers',
+      tooltip: l.mapLayers,
       onSelected: (v) {
         switch (v) {
           case 'roads':
@@ -700,9 +748,9 @@ class _LayerMenu extends StatelessWidget {
         }
       },
       itemBuilder: (_) => [
-        _check('roads', 'Road safety', provider.showRoads),
-        _check('flood', 'Inundation zone', provider.showInundation),
-        _check('shelters', 'Shelters', provider.showShelters),
+        _check('roads', l.mapLayerRoads, provider.showRoads),
+        _check('flood', l.mapLayerInundation, provider.showInundation),
+        _check('shelters', l.mapLayerShelters, provider.showShelters),
       ],
     );
   }
@@ -726,7 +774,9 @@ class _Legend extends StatelessWidget {
   const _Legend({required this.provider});
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final sources = provider.data?.availableSources ?? const <String>{};
+    final reliesOnOptional = !sources.contains('dmc');
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -734,16 +784,18 @@ class _Legend extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _line(AppTheme.alertGreen, 'Safe road'),
-            _line(AppTheme.alertRed, 'Flood-prone road'),
-            _dot(AppTheme.alertRed.withOpacity(0.35), 'Inundation zone'),
+            _line(AppTheme.alertGreen, l.mapLegendSafeRoad),
+            _line(AppTheme.alertRed, l.mapLegendFloodRoad),
+            _dot(AppTheme.alertRed.withOpacity(0.35), l.mapLegendInundation),
             if (sources.contains('dmc'))
-              _dot(AppTheme.alertGreen, 'DMC shelter'),
-            if (sources.contains('literature') && provider.showLiteratureShelters)
-              _dot(AppTheme.oceanLight, 'Research shelter'),
-            if (sources.contains('osm') && provider.showOsmShelters)
-              _dot(AppTheme.alertOrange, 'OSM shelter'),
-            _dot(const Color(0xFF1A73E8), 'You'),
+              _dot(AppTheme.alertGreen, l.mapLegendDmc),
+            if (sources.contains('literature') &&
+                (provider.showLiteratureShelters || reliesOnOptional))
+              _dot(AppTheme.oceanLight, l.mapLegendResearch),
+            if (sources.contains('osm') &&
+                (provider.showOsmShelters || reliesOnOptional))
+              _dot(AppTheme.alertOrange, l.mapLegendOsm),
+            _dot(const Color(0xFF1A73E8), l.mapLegendYou),
           ],
         ),
       ),
@@ -824,15 +876,20 @@ class _BottomPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final route = provider.route;
-    final showOsmNote = provider.showOsmShelters &&
-        (provider.data?.availableSources.contains('osm') ?? false);
+    final sources = provider.data?.availableSources ?? const <String>{};
+    // Show the unverified-shelter note whenever OSM shelters are in play: either
+    // the user enabled them, or the district relies on them for routing (no DMC).
+    final reliesOnOptional = !sources.contains('dmc');
+    final showOsmNote =
+        sources.contains('osm') && (provider.showOsmShelters || reliesOnOptional);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (origin == null)
-          _hintCard(context)
+          _hintCard(context, l)
         else ...[
           if (provider.routableNow) ...[
             _StrategySelector(provider: provider),
@@ -842,22 +899,23 @@ class _BottomPanel extends StatelessWidget {
         ],
         if (showOsmNote) ...[
           const SizedBox(height: 6),
-          const Text(
-            'OpenStreetMap shelters are auto-identified and unverified.',
-            style: TextStyle(fontSize: 10, color: AppTheme.alertOrange),
+          Text(
+            l.mapOsmUnverified,
+            style: const TextStyle(fontSize: 10, color: AppTheme.alertOrange),
             textAlign: TextAlign.center,
           ),
         ],
         const SizedBox(height: 6),
-        const Center(
-          child: Text('Powered by GETRA',
-              style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+        Center(
+          child: Text(l.poweredByGetra,
+              style: const TextStyle(
+                  fontSize: 10, color: AppTheme.textSecondary)),
         ),
       ],
     );
   }
 
-  Widget _hintCard(BuildContext context) {
+  Widget _hintCard(BuildContext context, AppLocalizations l) {
     final hint = provider.routingHint;
     final isGuide = hint != null;
     return Card(
@@ -871,8 +929,7 @@ class _BottomPanel extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                hint ??
-                    'Tap “My location”, or tap anywhere on the map, to find the safest route to a shelter.',
+                hint ?? l.mapTapToRoute,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
@@ -883,11 +940,19 @@ class _BottomPanel extends StatelessWidget {
   }
 }
 
+/// Localised label for a routing strategy.
+String _strategyLabel(AppLocalizations l, RouteStrategy s) => switch (s) {
+      RouteStrategy.safest => l.mapRouteStrategySafest,
+      RouteStrategy.balanced => l.mapRouteStrategyBalanced,
+      RouteStrategy.shortest => l.mapRouteStrategyShortest,
+    };
+
 class _StrategySelector extends StatelessWidget {
   final GetraProvider provider;
   const _StrategySelector({required this.provider});
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     // Centered so the control hugs its buttons (no wide background frame), with
     // solid per-segment fills so it stays legible over the map in dark mode.
@@ -897,7 +962,13 @@ class _StrategySelector extends StatelessWidget {
         segments: RouteStrategy.values
             .map((s) => ButtonSegment<RouteStrategy>(
                   value: s,
-                  label: Text(s.label, style: const TextStyle(fontSize: 12)),
+                  // Scale long translated labels down to fit the segment rather
+                  // than overflowing (Tamil/Sinhala labels are wider).
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(_strategyLabel(l, s),
+                        maxLines: 1, style: const TextStyle(fontSize: 12)),
+                  ),
                   icon: Icon(s.icon, size: 16),
                 ))
             .toList(),
@@ -929,6 +1000,7 @@ class _RouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (!route.found) {
       return Card(
         color: AppTheme.alertYellow.withOpacity(0.18),
@@ -939,7 +1011,7 @@ class _RouteCard extends StatelessWidget {
               const Icon(Icons.warning_amber, color: AppTheme.alertOrange),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(route.message ?? 'No route available.',
+                child: Text(route.message ?? l.mapUnavailable,
                     style: Theme.of(context).textTheme.bodyMedium),
               ),
               IconButton(icon: const Icon(Icons.close), onPressed: onClear),
@@ -961,9 +1033,14 @@ class _RouteCard extends StatelessWidget {
               children: [
                 Icon(route.strategy.icon, color: route.strategy.color, size: 18),
                 const SizedBox(width: 6),
-                Text('${route.strategy.label} route',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const Spacer(),
+                Expanded(
+                  child: Text(
+                    l.mapRouteHeading(_strategyLabel(l, route.strategy)),
+                    style: Theme.of(context).textTheme.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   icon: const Icon(Icons.close),
@@ -977,7 +1054,7 @@ class _RouteCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'To ${route.shelterName ?? 'nearest shelter'}',
+                    l.mapToShelter(route.shelterName ?? l.mapNearestShelter),
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
@@ -988,10 +1065,12 @@ class _RouteCard extends StatelessWidget {
             Row(
               children: [
                 _metric(Icons.straighten, '${route.distanceM} m'),
-                _metric(Icons.directions_walk, '~${route.walkMinutes} min'),
+                _metric(Icons.directions_walk, l.mapMinutesShort(route.walkMinutes)),
                 _metric(
                   safe ? Icons.verified_user : Icons.report_problem,
-                  safe ? '$safetyPct% safe' : '$safetyPct% • ${route.unsafeSegments} risky',
+                  safe
+                      ? l.mapPctSafe(safetyPct)
+                      : l.mapPctRisky(safetyPct, route.unsafeSegments),
                   color: safe ? AppTheme.alertGreen : AppTheme.alertOrange,
                 ),
               ],

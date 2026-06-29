@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/models/checklist.dart';
+import '../data/content/checklist_content.dart';
 
 /// Provider for preparedness checklist
 class ChecklistProvider extends ChangeNotifier {
@@ -25,23 +26,24 @@ class ChecklistProvider extends ChangeNotifier {
   /// Get completed items count
   int get completedItemsCount => _checklist?.completedItems ?? 0;
 
-  /// Load checklist from storage or create default
-  Future<void> loadChecklist() async {
+  String _lang = 'en';
+
+  /// Load the checklist for [lang], rebuilding the template in that language but
+  /// carrying over the user's checked/note state (and any custom items) by the
+  /// stable category/item ids, so a language switch never loses progress.
+  Future<void> loadChecklist({String lang = 'en'}) async {
+    _lang = lang;
     _isLoading = true;
     notifyListeners();
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedData = prefs.getString('user_checklist');
+      final saved = savedData != null
+          ? UserChecklist.fromJson(json.decode(savedData) as Map<String, dynamic>)
+          : null;
 
-      if (savedData != null) {
-        _checklist = UserChecklist.fromJson(
-          json.decode(savedData) as Map<String, dynamic>,
-        );
-      } else {
-        _checklist = _getDefaultChecklist();
-      }
-
+      _checklist = _buildForLanguage(lang, saved);
       _error = null;
     } catch (e) {
       _error = e.toString();
@@ -50,6 +52,47 @@ class ChecklistProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+    // Persist so the stored copy matches the active language.
+    await _saveChecklist();
+  }
+
+  /// Build the checklist for [lang] from the content template, overlaying any
+  /// saved checked/note/lastChecked state and re-appending user-added items.
+  UserChecklist _buildForLanguage(String lang, UserChecklist? saved) {
+    final state = <String, ChecklistItem>{};
+    final customByCategory = <String, List<ChecklistItem>>{};
+    if (saved != null) {
+      for (final cat in saved.categories) {
+        for (final it in cat.items) {
+          state['${cat.id}/${it.id}'] = it;
+          if (it.id.startsWith('custom_')) {
+            (customByCategory[cat.id] ??= []).add(it);
+          }
+        }
+      }
+    }
+
+    final categories = categoriesFor(lang).map((cat) {
+      final items = cat.items.map((tmpl) {
+        final prev = state['${cat.id}/${tmpl.id}'];
+        if (prev == null) return tmpl;
+        return tmpl.copyWith(
+          isChecked: prev.isChecked,
+          lastChecked: prev.lastChecked,
+          note: prev.note,
+        );
+      }).toList();
+      final customs = customByCategory[cat.id];
+      if (customs != null) items.addAll(customs);
+      return ChecklistCategory(
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        items: items,
+      );
+    }).toList();
+
+    return UserChecklist(categories: categories, lastUpdated: DateTime.now());
   }
 
   /// Toggle a checklist item
@@ -178,171 +221,11 @@ class ChecklistProvider extends ChangeNotifier {
     return items;
   }
 
-  /// Create default checklist
-  UserChecklist _getDefaultChecklist() {
-    return UserChecklist(
-      categories: [
-        ChecklistCategory(
-          id: 'emergency_kit',
-          name: 'Emergency Kit',
-          icon: 'backpack',
-          items: [
-            ChecklistItem(
-              id: 'water',
-              title: 'Drinking Water',
-              description: 'At least 3 liters per person for 3 days',
-              reminderDays: 180, // Check every 6 months
-            ),
-            ChecklistItem(
-              id: 'food',
-              title: 'Non-perishable Food',
-              description: 'Canned goods, dry foods, energy bars for 3 days',
-              reminderDays: 180,
-            ),
-            ChecklistItem(
-              id: 'first_aid',
-              title: 'First Aid Kit',
-              description: 'Bandages, antiseptic, pain relievers, any personal medications',
-              reminderDays: 365,
-            ),
-            ChecklistItem(
-              id: 'flashlight',
-              title: 'Flashlight & Batteries',
-              description: 'LED flashlight with extra batteries',
-              reminderDays: 180,
-            ),
-            ChecklistItem(
-              id: 'radio',
-              title: 'Battery/Crank Radio',
-              description: 'To receive emergency broadcasts',
-              reminderDays: 365,
-            ),
-            ChecklistItem(
-              id: 'phone_charger',
-              title: 'Phone Charger / Power Bank',
-              description: 'Fully charged power bank',
-              reminderDays: 30,
-            ),
-            ChecklistItem(
-              id: 'cash',
-              title: 'Cash (Small Bills)',
-              description: 'ATMs may not work after disaster',
-            ),
-            ChecklistItem(
-              id: 'documents',
-              title: 'Important Documents',
-              description: 'Copies of ID, insurance, bank details in waterproof bag',
-            ),
-            ChecklistItem(
-              id: 'medications',
-              title: 'Personal Medications',
-              description: 'At least 7-day supply of essential medications',
-              reminderDays: 90,
-            ),
-            ChecklistItem(
-              id: 'whistle',
-              title: 'Whistle',
-              description: 'To signal for help if trapped',
-            ),
-          ],
-        ),
-        ChecklistCategory(
-          id: 'family_plan',
-          name: 'Family Plan',
-          icon: 'family_restroom',
-          items: [
-            ChecklistItem(
-              id: 'meeting_point',
-              title: 'Meeting Point Identified',
-              description: 'A safe location where family members will reunite',
-            ),
-            ChecklistItem(
-              id: 'contacts',
-              title: 'Emergency Contacts Saved',
-              description: 'Family contacts saved and memorized',
-            ),
-            ChecklistItem(
-              id: 'route_known',
-              title: 'Evacuation Route Known',
-              description: 'Everyone knows the primary evacuation route',
-            ),
-            ChecklistItem(
-              id: 'route_practiced',
-              title: 'Evacuation Route Practiced',
-              description: 'Family has walked the evacuation route together',
-              reminderDays: 180,
-            ),
-            ChecklistItem(
-              id: 'responsibilities',
-              title: 'Responsibilities Assigned',
-              description: 'Who grabs what, who helps whom',
-            ),
-            ChecklistItem(
-              id: 'out_of_area_contact',
-              title: 'Out-of-Area Contact',
-              description: 'A relative/friend outside the area to coordinate through',
-            ),
-          ],
-        ),
-        ChecklistCategory(
-          id: 'home_safety',
-          name: 'Home Safety',
-          icon: 'home',
-          items: [
-            ChecklistItem(
-              id: 'kit_location',
-              title: 'Emergency Kit Location Known',
-              description: 'Kit is in an accessible location known to all',
-            ),
-            ChecklistItem(
-              id: 'shoes_ready',
-              title: 'Sturdy Shoes Ready',
-              description: 'Shoes near bed for quick evacuation (debris protection)',
-            ),
-            ChecklistItem(
-              id: 'phone_charged',
-              title: 'Phone Charged at Night',
-              description: 'Keep phone charged, especially at night',
-            ),
-            ChecklistItem(
-              id: 'insurance',
-              title: 'Insurance Reviewed',
-              description: 'Home/contents insurance covers natural disasters',
-              reminderDays: 365,
-            ),
-          ],
-        ),
-        ChecklistCategory(
-          id: 'knowledge',
-          name: 'Knowledge & Skills',
-          icon: 'school',
-          items: [
-            ChecklistItem(
-              id: 'warning_signs',
-              title: 'Know Natural Warning Signs',
-              description: 'Can recognize earthquake, ocean withdrawal, etc.',
-            ),
-            ChecklistItem(
-              id: 'first_aid_training',
-              title: 'Basic First Aid Knowledge',
-              description: 'Know CPR, wound care, recovery position',
-            ),
-            ChecklistItem(
-              id: 'safe_zones',
-              title: 'Know Nearby Safe Zones',
-              description: 'Can identify at least 2 nearby evacuation points',
-            ),
-            ChecklistItem(
-              id: 'app_notifications',
-              title: 'App Notifications Enabled',
-              description: 'TsunamiSense notifications are turned on',
-            ),
-          ],
-        ),
-      ],
-      lastUpdated: DateTime.now(),
-    );
-  }
+  /// Create the default (unstarted) checklist in the active language.
+  UserChecklist _getDefaultChecklist() => UserChecklist(
+        categories: categoriesFor(_lang),
+        lastUpdated: DateTime.now(),
+      );
 
   /// Generate summary for PDF export
   Map<String, dynamic> getSummaryForExport() {
