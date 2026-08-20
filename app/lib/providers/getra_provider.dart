@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -196,7 +198,14 @@ class GetraProvider extends ChangeNotifier {
     _lastLat = lat;
     _lastLng = lng;
     final d = _data;
-    if (d == null) return;
+    if (d == null) {
+      // The district's map layers could not be loaded at all. A single small
+      // request may still get through on a connection too poor for the full
+      // bundle, so ask the backend to trace the route instead of giving up.
+      final sel = _selected;
+      if (sel != null) unawaited(_traceOnline(sel, lat, lng, emergencyDmcOnly));
+      return;
+    }
     if (emergencyDmcOnly) _strategy = RouteStrategy.safest;
     final lit = emergencyDmcOnly ? false : _showLiteratureShelters;
     final osm = emergencyDmcOnly ? false : _showOsmShelters;
@@ -209,6 +218,32 @@ class GetraProvider extends ChangeNotifier {
             'inland and uphill, away from the coast.',
           );
     notifyListeners();
+  }
+
+  /// Ask the backend to trace a route when the district bundle is unavailable.
+  /// Best effort only: a failure here leaves the existing route untouched.
+  Future<void> _traceOnline(
+    District d,
+    double lat,
+    double lng,
+    bool emergencyDmcOnly,
+  ) async {
+    if (emergencyDmcOnly) _strategy = RouteStrategy.safest;
+    try {
+      final r = await _service.fetchRoute(
+        d,
+        lat,
+        lng,
+        _strategy,
+        shelterSet: emergencyDmcOnly ? 'dmc' : null,
+      );
+      // Ignore a stale reply if the user has moved on or data has since loaded.
+      if (_lastLat != lat || _lastLng != lng || _data != null) return;
+      _route = r;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[GETRA] online route trace failed: $e');
+    }
   }
 
   void clearRoute() {
