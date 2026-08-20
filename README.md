@@ -98,7 +98,7 @@ routes there.
 ```
 app/         Flutter application (Dart, ~9.7k lines across 41 files)
 backend/     FastAPI service + Dockerfile serving the precomputed GETRA data
-tool/        sync_app_data.sh — regenerates the app's offline seed from backend/data
+tool/        sync_app_data.sh, regenerates the app's offline seed from backend/data
 docs/        screenshots and supporting notes
 ```
 
