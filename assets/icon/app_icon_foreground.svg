@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="22" flood-color="#062a45" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <!-- Foreground = the shelter pin only, centred within the adaptive safe zone.
+       The waves live in app_icon_background so nothing is clipped as a hard box. -->
+  <g filter="url(#soft)" transform="translate(224,172) scale(24)">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#4CAF50"/>
+    <circle cx="12" cy="9" r="2.7" fill="#FFFFFF"/>
+  </g>
+</svg>
