@@ -120,6 +120,12 @@ flutter:
     - assets/data/
     - assets/lessons/
     - assets/geojson/
+    # Gzipped GETRA district data, so a first launch works with no network.
+    # Regenerate with ./tool/sync_app_data.sh from the repo root.
+    - assets/getra/
+    - assets/getra/galle/
+    - assets/getra/matara/
+    - assets/getra/tangalle/
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

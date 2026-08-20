@@ -1,12 +1,16 @@
 import 'dart:convert';
+import 'dart:io' show gzip;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 
 import '../../core/constants/api_constants.dart';
 import '../models/district.dart';
 import '../models/district_data.dart';
+import '../models/evacuation_route.dart';
+import '../models/route_strategy.dart';
 
 /// Thrown when GETRA data cannot be fetched and no cache is available.
 class GetraException implements Exception {
@@ -38,6 +42,27 @@ class GetraService {
 
   Box get _box => Hive.box(boxName);
   String get _base => ApiConstants.getraBaseUrl;
+
+  // -- Bundled seed data ---------------------------------------------------
+
+  /// Root of the gzipped copies of the backend's data shipped inside the app.
+  /// Written by tool/sync_app_data.sh; keys match the API's endpoint names so
+  /// the offline seed and the network response are interchangeable.
+  static const String _assetRoot = 'assets/getra';
+
+  /// Read one gzipped asset, or null when it is not bundled.
+  ///
+  /// This is what makes a first launch work with no server and no signal: the
+  /// map layers and routing tables are already on the device.
+  Future<String?> _asset(String path) async {
+    try {
+      final data = await rootBundle.load('$_assetRoot/$path');
+      return utf8.decode(gzip.decode(data.buffer.asUint8List()));
+    } catch (e) {
+      debugPrint('[GETRA] no bundled asset $path ($e)');
+      return null;
+    }
+  }
 
   Future<String> _getBody(String url) async {
     try {
@@ -71,6 +96,13 @@ class GetraService {
       if (cached != null) {
         return (districts: _parseRegistry(cached), fromCache: true);
       }
+      // Nothing cached yet: fall back to the registry bundled with the app so a
+      // first launch offline still gets a map instead of an error screen.
+      final seed = await _asset('districts.json.gz');
+      if (seed != null) {
+        await _box.put('registry', seed);
+        return (districts: _parseRegistry(seed), fromCache: true);
+      }
       throw GetraException('No district registry available (offline, no cache).');
     }
   }
@@ -103,6 +135,18 @@ class GetraService {
         for (final f in _filesFor(d))
           f: _box.get(_cacheKey(d.id, f)) as String,
       };
+
+  /// Read a district's whole bundle from the seed assets shipped in the app.
+  /// Returns null unless every file the district needs is present.
+  Future<Map<String, String>?> _readSeed(District d) async {
+    final out = <String, String>{};
+    for (final f in _filesFor(d)) {
+      final s = await _asset('${d.id}/$f.gz');
+      if (s == null) return null;
+      out[f] = s;
+    }
+    return out;
+  }
 
   DistrictData _build(District d, Map<String, String> raw) {
     Map<String, dynamic> decode(String f) =>
@@ -161,13 +205,65 @@ class GetraService {
         fromCache = false;
       } catch (e) {
         if (!hasCache) {
-          throw GetraException('Cannot load ${d.name} (offline, no cache).');
+          // No network and nothing cached: seed from the bundled copy so the
+          // district still opens and routes. The version key is deliberately
+          // left unset, so the next launch with a connection still refreshes.
+          final seed = await _readSeed(d);
+          if (seed == null) {
+            throw GetraException('Cannot load ${d.name} (offline, no cache).');
+          }
+          for (final entry in seed.entries) {
+            await _box.put(_cacheKey(d.id, entry.key), entry.value);
+          }
+          raw = seed;
         }
       }
     }
 
     raw ??= _readCache(d);
     return (data: _build(d, raw), fromCache: fromCache);
+  }
+
+  // -- Online helpers ------------------------------------------------------
+
+  /// True when a district's bundle is already usable without the network.
+  bool hasLocalBundle(District d) => _hasAllCached(d);
+
+  /// Per-district data versions, used to decide whether a cached bundle is
+  /// stale. Much cheaper than pulling the whole registry just to compare.
+  Future<Map<String, String>> fetchVersions() async {
+    final body = await _getBody('$_base/version');
+    final json = jsonDecode(body) as Map<String, dynamic>;
+    return (json['districts'] as Map<String, dynamic>)
+        .map((k, v) => MapEntry(k, v as String));
+  }
+
+  /// Ask the backend to trace a route directly.
+  ///
+  /// Only worth calling before a district's bundle has been downloaded: it
+  /// returns a route in one small request instead of waiting on several hundred
+  /// kilobytes of basin data. Once the bundle is local, tracing offline is both
+  /// faster and works without a signal.
+  Future<EvacuationRoute> fetchRoute(
+    District d,
+    double lat,
+    double lng,
+    RouteStrategy strategy, {
+    String? shelterSet,
+  }) async {
+    final uri = Uri.parse('$_base/districts/${d.id}/route').replace(
+      queryParameters: {
+        'lat': '$lat',
+        'lng': '$lng',
+        'strategy': strategy.id,
+        if (shelterSet != null) 'set': shelterSet,
+      },
+    );
+    final body = await _getBody(uri.toString());
+    return EvacuationRoute.fromApi(
+      jsonDecode(body) as Map<String, dynamic>,
+      strategy,
+    );
   }
 
   void dispose() => _client.close();
