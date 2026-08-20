@@ -46,9 +46,14 @@ uvicorn main:app --reload --port 8000
 | GET | `/districts/{id}/shelters` | shelters (GeoJSON) |
 | GET | `/districts/{id}/nodes` | node id → [lon, lat] (for offline route tracing) |
 | GET | `/districts/{id}/evac_basin` | per-strategy nearest-shelter route tree (offline payload) |
-| GET | `/districts/{id}/route?lat=&lng=&strategy=` | live route trace to nearest shelter |
+| GET | `/districts/{id}/route?lat=&lng=&strategy=&set=` | live route trace to nearest shelter |
 
 `strategy` ∈ `shortest | balanced | safest` (default `safest`).
+
+`set` selects which shelter sources to route to, and must be one of the district's
+precomputed basin keys: Galle has `dmc` and `dmc+literature`; Matara and Tangalle have
+`osm` only. When omitted it defaults to `dmc` where available, otherwise the district's
+single set, matching the app's default in `district_data.dart`.
 
 ## Deploy (Hugging Face Docker Space)
 

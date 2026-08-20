@@ -86,7 +86,10 @@ def get_routing_cache(district: str) -> Dict:
         return _cache[district]
 
     nodes = _load_json(district, "nodes.json")          # {node_str: [lon, lat]}
-    basin = _load_json(district, "evac_basin.json")     # {strategy: {node_str: {...}}}
+    # {shelter_set: {strategy: {node_str: {...}}}} — the set is a sorted, '+'-joined
+    # combination of the shelter sources the district has ("dmc", "dmc+literature",
+    # "osm"), matching the app's basin key in district_data.dart.
+    basin = _load_json(district, "evac_basin.json")
     shelters = _load_json(district, "shelters.geojson")
     roads = _load_json(district, "roads.geojson")
 
@@ -109,6 +112,27 @@ def get_routing_cache(district: str) -> Dict:
     cache = {"nodes": nodes, "basin": basin, "shelter_by_id": shelter_by_id, "edge_geom": edge_geom}
     _cache[district] = cache
     return cache
+
+
+def _resolve_basin_set(basin: Dict, district: str, requested: Optional[str]) -> str:
+    """Pick which shelter-set basin to trace.
+
+    Mirrors the app's default in district_data.dart: DMC-verified shelters only
+    when the district has them, otherwise every source the district does have
+    (Matara and Tangalle ship OSM shelters only, so they would not route at all
+    under a strict DMC-only rule).
+    """
+    available = sorted(basin.keys())
+    if not available:
+        raise HTTPException(status_code=404, detail=f"'{district}' has no routing (map-only)")
+    if requested is not None:
+        if requested not in basin:
+            raise HTTPException(
+                status_code=400,
+                detail=f"unknown set '{requested}' for '{district}'; available: {available}",
+            )
+        return requested
+    return "dmc" if "dmc" in basin else available[0]
 
 
 def _haversine_m(lat1, lon1, lat2, lon2) -> float:
@@ -204,6 +228,7 @@ def route(
     lat: float = Query(..., ge=-90, le=90),
     lng: float = Query(..., ge=-180, le=180),
     strategy: str = Query("safest"),
+    set: Optional[str] = Query(None, description="shelter set, e.g. 'dmc', 'dmc+literature', 'osm'"),
 ):
     """Snap a GPS point to the nearest road node and trace the precomputed
     evacuation route to its nearest shelter. Mirrors the app's offline logic."""
@@ -211,9 +236,13 @@ def route(
         raise HTTPException(status_code=400, detail=f"strategy must be one of {sorted(STRATEGIES)}")
 
     cache = get_routing_cache(district)
-    basin = cache["basin"].get(strategy)
+    basin_set = _resolve_basin_set(cache["basin"], district, set)
+    basin = cache["basin"][basin_set].get(strategy)
     if basin is None:
-        raise HTTPException(status_code=404, detail=f"'{district}' has no routing (map-only)")
+        raise HTTPException(
+            status_code=404,
+            detail=f"'{district}' set '{basin_set}' has no '{strategy}' basin",
+        )
 
     src_node, snap_d = _nearest_node(cache["nodes"], lat, lng)
     if src_node not in basin:
@@ -223,6 +252,7 @@ def route(
             "message": "No precomputed route from here. Move inland and uphill, away from the coast.",
             "origin": [lng, lat],
             "snap_distance_m": round(snap_d),
+            "set": basin_set,
         })
 
     # trace next-pointers to build the node path
@@ -262,6 +292,7 @@ def route(
         "found": True,
         "district": district,
         "strategy": strategy,
+        "set": basin_set,
         "origin": [lng, lat],
         "snap_distance_m": round(snap_d),
         "shelter": shelter,
