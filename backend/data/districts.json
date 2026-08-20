@@ -1,0 +1,122 @@
+{
+  "version": "b5d62390bf1b",
+  "districts": [
+    {
+      "id": "galle",
+      "name": "Galle",
+      "capabilities": [
+        "map",
+        "routing"
+      ],
+      "bbox": [
+        80.1755,
+        6.024215,
+        80.24575,
+        6.08756
+      ],
+      "center": [
+        6.054289,
+        80.216272
+      ],
+      "version": "b05370db4f1e",
+      "counts": {
+        "roads": 3377,
+        "unsafe": 865,
+        "inundation_polygons": 4,
+        "shelters": 100,
+        "nodes": 2856,
+        "shelters_routing": 33,
+        "basin_keys": [
+          "dmc",
+          "dmc+literature"
+        ],
+        "coverage": {
+          "dmc": {
+            "shortest": 2856,
+            "balanced": 2856,
+            "safest": 2856
+          },
+          "dmc+literature": {
+            "shortest": 2856,
+            "balanced": 2856,
+            "safest": 2856
+          }
+        }
+      }
+    },
+    {
+      "id": "matara",
+      "name": "Matara",
+      "capabilities": [
+        "map",
+        "routing"
+      ],
+      "bbox": [
+        80.412294,
+        5.919653,
+        80.76713,
+        6.006078
+      ],
+      "center": [
+        5.962014,
+        80.561566
+      ],
+      "version": "fa309e19fa00",
+      "counts": {
+        "roads": 7994,
+        "unsafe": 1697,
+        "inundation_polygons": 5,
+        "shelters": 30,
+        "nodes": 6728,
+        "shelters_routing": 27,
+        "basin_keys": [
+          "osm"
+        ],
+        "coverage": {
+          "osm": {
+            "shortest": 6728,
+            "balanced": 6728,
+            "safest": 6728
+          }
+        }
+      }
+    },
+    {
+      "id": "tangalle",
+      "name": "Tangalle",
+      "capabilities": [
+        "map",
+        "routing"
+      ],
+      "bbox": [
+        80.773625,
+        6.006672,
+        80.889181,
+        6.096933
+      ],
+      "center": [
+        6.052228,
+        80.812749
+      ],
+      "version": "7a17e08a7617",
+      "counts": {
+        "roads": 1238,
+        "unsafe": 209,
+        "inundation_polygons": 3,
+        "shelters": 26,
+        "nodes": 1042,
+        "shelters_routing": 24,
+        "basin_keys": [
+          "osm"
+        ],
+        "coverage": {
+          "osm": {
+            "shortest": 1042,
+            "balanced": 1042,
+            "safest": 1042
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "matara",
+  "name": "Matara",
+  "capabilities": [
+    "map",
+    "routing"
+  ],
+  "bbox": [
+    80.412294,
+    5.919653,
+    80.76713,
+    6.006078
+  ],
+  "center": [
+    5.962014,
+    80.561566
+  ],
+  "depth_threshold_m": 0.5,
+  "version": "fa309e19fa00",
+  "counts": {
+    "roads": 7994,
+    "unsafe": 1697,
+    "inundation_polygons": 5,
+    "shelters": 30,
+    "nodes": 6728,
+    "shelters_routing": 27,
+    "basin_keys": [
+      "osm"
+    ],
+    "coverage": {
+      "osm": {
+        "shortest": 6728,
+        "balanced": 6728,
+        "safest": 6728
+      }
+    }
+  }
+}

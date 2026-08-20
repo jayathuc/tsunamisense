@@ -1,0 +1,44 @@
+{
+  "id": "galle",
+  "name": "Galle",
+  "capabilities": [
+    "map",
+    "routing"
+  ],
+  "bbox": [
+    80.1755,
+    6.024215,
+    80.24575,
+    6.08756
+  ],
+  "center": [
+    6.054289,
+    80.216272
+  ],
+  "depth_threshold_m": 0.5,
+  "version": "b05370db4f1e",
+  "counts": {
+    "roads": 3377,
+    "unsafe": 865,
+    "inundation_polygons": 4,
+    "shelters": 100,
+    "nodes": 2856,
+    "shelters_routing": 33,
+    "basin_keys": [
+      "dmc",
+      "dmc+literature"
+    ],
+    "coverage": {
+      "dmc": {
+        "shortest": 2856,
+        "balanced": 2856,
+        "safest": 2856
+      },
+      "dmc+literature": {
+        "shortest": 2856,
+        "balanced": 2856,
+        "safest": 2856
+      }
+    }
+  }
+}

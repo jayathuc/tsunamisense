@@ -1,0 +1,38 @@
+{
+  "id": "tangalle",
+  "name": "Tangalle",
+  "capabilities": [
+    "map",
+    "routing"
+  ],
+  "bbox": [
+    80.773625,
+    6.006672,
+    80.889181,
+    6.096933
+  ],
+  "center": [
+    6.052228,
+    80.812749
+  ],
+  "depth_threshold_m": 0.5,
+  "version": "7a17e08a7617",
+  "counts": {
+    "roads": 1238,
+    "unsafe": 209,
+    "inundation_polygons": 3,
+    "shelters": 26,
+    "nodes": 1042,
+    "shelters_routing": 24,
+    "basin_keys": [
+      "osm"
+    ],
+    "coverage": {
+      "osm": {
+        "shortest": 1042,
+        "balanced": 1042,
+        "safest": 1042
+      }
+    }
+  }
+}

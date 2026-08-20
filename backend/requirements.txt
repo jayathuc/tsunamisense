@@ -1,0 +1,4 @@
+# GETRA public backend — intentionally lightweight.
+# Routing uses precomputed evacuation basins, so no torch / PyG / networkx here.
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
