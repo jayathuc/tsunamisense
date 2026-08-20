@@ -93,7 +93,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeData();
+    // Deferred to after the first frame: the providers notify their listeners
+    // synchronously as soon as they start loading, which is illegal during
+    // build and throws "setState() called during build".
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _initializeData();
+    });
   }
 
   @override
