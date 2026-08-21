@@ -170,7 +170,54 @@ walking the basin, so it needs neither PyTorch nor a graph library.
 
 ## Screenshots
 
-See [`docs/screenshots/`](docs/screenshots/).
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/home.png" alt="Home screen showing threat status and recent seismic activity" width="240"><br>
+      <b>Home</b><br>
+      <sub>Live USGS feed, current threat level</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/map.png" alt="Galle map with classified roads, inundation zone and shelters" width="240"><br>
+      <b>Evacuation map</b><br>
+      <sub>Safe vs flood-prone roads, inundation zone, shelters</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/screenshots/route.png" alt="Traced evacuation route to a shelter" width="240"><br>
+      <b>Route</b><br>
+      <sub>Traced on-device, with distance, time and risk</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/emergency.png" alt="Emergency mode with tsunami warning and evacuation route" width="240"><br>
+      <b>Emergency mode</b><br>
+      <sub>Forces the safest route, warns when a shelter is out of reach</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/learn.png" alt="Lessons and quizzes" width="240"><br>
+      <b>Learn</b><br>
+      <sub>15 lessons, 21 quiz questions</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/sinhala.png" alt="Preparedness checklist in Sinhala" width="240"><br>
+      <b>Sinhala</b><br>
+      <sub>Fully translated, navigation included</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/tamil.png" alt="App interface in Tamil" width="240"><br>
+      <b>Tamil</b><br>
+      <sub>The third supported language</sub>
+    </td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+The map and route screenshots above were captured in offline mode, with the app
+serving its bundled data rather than reaching the network.
 
 ---
 
