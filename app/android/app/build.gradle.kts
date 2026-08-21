@@ -8,10 +8,10 @@ plugins {
 android {
     namespace = "com.tsunamisense.tsunamisense_app"
     compileSdk = flutter.compileSdkVersion
-    // Pinned to the installed, complete NDK. Plugins request 27.x, but that is a
-    // soft alignment warning and 26.3 builds them fine. To silence the warning,
-    // install NDK 27.0.12077973 via Android Studio SDK Manager and bump this.
-    ndkVersion = "26.3.11579264"
+    // Matches the version every plugin requests (connectivity_plus, geolocator,
+    // firebase, etc). NDK releases are backward compatible, so this is the
+    // highest requested rather than the lowest.
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
