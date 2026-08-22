@@ -698,4 +698,43 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get settingsTermsOfService => 'සේවා කොන්දේසි';
+
+  @override
+  String get mapDataStale =>
+      'උපද්‍රව දත්ත යල් පැන ගොස් තිබිය හැක. යාවත්කාලීන කිරීමට සම්බන්ධ වන්න.';
+
+  @override
+  String mapDataAgeDays(int days) {
+    return 'දත්ත දින $daysකට පෙර යාවත්කාලීන කරන ලදී';
+  }
+
+  @override
+  String get mapDataNeverUpdated => 'යෙදුම සමඟ ලැබුණු දත්ත භාවිතා කරයි';
+
+  @override
+  String a11yRouteSummary(
+    String shelter,
+    int distance,
+    int minutes,
+    int unsafe,
+  ) {
+    return '$shelter වෙත ඉවත් වීමේ මාර්ගය. මීටර් $distanceක්, ගමන් කිරීමට ආසන්න වශයෙන් මිනිත්තු $minutesක්. අවදානම් මාර්ග කොටස් $unsafeක්.';
+  }
+
+  @override
+  String a11yMapLabel(String district) {
+    return '$district හි ඉවත් වීමේ සිතියම. වර්ගීකෘත මාර්ග, ගංවතුර කලාපය සහ නවාතැන් පෙන්වයි.';
+  }
+
+  @override
+  String get a11yMyLocation => 'මගේ ස්ථානය සොයා ආසන්නතම නවාතැනට මාර්ගය ලබාගන්න';
+
+  @override
+  String get a11yResetNorth => 'සිතියමේ දිශානතිය උතුරට යළි සකසන්න';
+
+  @override
+  String get a11yClearRoute => 'වත්මන් මාර්ගය ඉවත් කරන්න';
+
+  @override
+  String get a11yLegend => 'සිතියම් යතුර';
 }

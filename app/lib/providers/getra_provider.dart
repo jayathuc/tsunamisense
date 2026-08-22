@@ -54,6 +54,30 @@ class GetraProvider extends ChangeNotifier {
   bool get showOsmShelters => _showOsmShelters;
   bool get hasRouting => _data?.hasRouting ?? false;
 
+  /// Age of the active district's hazard data, or null when it has never been
+  /// refreshed from the backend (i.e. it is still the copy bundled at build
+  /// time). Drives the staleness warning on the map.
+  Duration? get dataAge {
+    final d = _selected;
+    if (d == null) return null;
+    final at = _service.lastFetched(d);
+    if (at == null) return null;
+    return DateTime.now().toUtc().difference(at);
+  }
+
+  /// Past this, the data is old enough that the user should be told. Inundation
+  /// extents and shelter lists are revised periodically, and routing on a stale
+  /// copy is a safety matter rather than a cosmetic one.
+  static const Duration staleAfter = Duration(days: 30);
+
+  bool get isDataStale {
+    final age = dataAge;
+    // Never refreshed at all counts as stale: the bundled copy is as old as the
+    // last release.
+    if (age == null) return true;
+    return age > staleAfter;
+  }
+
   /// Whether the active district can route with the current shelter toggles.
   bool get routableNow =>
       _data?.canRoute(
@@ -130,6 +154,33 @@ class GetraProvider extends ChangeNotifier {
 
   District _pickDefault(List<District> ds) =>
       ds.firstWhere((d) => d.id == 'galle', orElse: () => ds.first);
+
+  /// The covered district containing this position, or null if outside them all.
+  /// bbox is [minLon, minLat, maxLon, maxLat].
+  District? districtContaining(double lat, double lng) {
+    for (final d in _districts) {
+      if (d.bbox.length < 4) continue;
+      if (lng >= d.bbox[0] &&
+          lng <= d.bbox[2] &&
+          lat >= d.bbox[1] &&
+          lat <= d.bbox[3]) {
+        return d;
+      }
+    }
+    return null;
+  }
+
+  /// Switch to whichever district the user is actually standing in.
+  ///
+  /// The map opens on Galle by default, so without this someone in Matara sees
+  /// the wrong map and has to know to change it by hand. Returns true if the
+  /// active district changed.
+  Future<bool> selectDistrictForPosition(double lat, double lng) async {
+    final here = districtContaining(lat, lng);
+    if (here == null || here.id == _selected?.id) return false;
+    await _loadDistrict(here);
+    return true;
+  }
 
   Future<void> selectDistrict(String id) async {
     if (_selected?.id == id) return;

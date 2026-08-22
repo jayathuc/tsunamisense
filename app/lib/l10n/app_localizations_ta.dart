@@ -700,4 +700,45 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get settingsTermsOfService => 'சேவை விதிமுறைகள்';
+
+  @override
+  String get mapDataStale =>
+      'இடர் தரவு காலாவதியாகி இருக்கலாம். புதுப்பிக்க இணையுங்கள்.';
+
+  @override
+  String mapDataAgeDays(int days) {
+    return 'தரவு $days நாட்களுக்கு முன் புதுப்பிக்கப்பட்டது';
+  }
+
+  @override
+  String get mapDataNeverUpdated =>
+      'செயலியுடன் வழங்கப்பட்ட தரவு பயன்படுத்தப்படுகிறது';
+
+  @override
+  String a11yRouteSummary(
+    String shelter,
+    int distance,
+    int minutes,
+    int unsafe,
+  ) {
+    return '$shelter நோக்கிய வெளியேற்றப் பாதை. $distance மீட்டர், சுமார் $minutes நிமிட நடை. $unsafe ஆபத்தான சாலைப் பகுதிகள்.';
+  }
+
+  @override
+  String a11yMapLabel(String district) {
+    return '$district இன் வெளியேற்ற வரைபடம். வகைப்படுத்தப்பட்ட சாலைகள், வெள்ளப் பகுதி மற்றும் தங்குமிடங்களைக் காட்டுகிறது.';
+  }
+
+  @override
+  String get a11yMyLocation =>
+      'எனது இருப்பிடத்தைக் கண்டறிந்து அருகிலுள்ள தங்குமிடத்திற்கான பாதையைப் பெறுக';
+
+  @override
+  String get a11yResetNorth => 'வரைபட திசையை வடக்கிற்கு மீட்டமை';
+
+  @override
+  String get a11yClearRoute => 'தற்போதைய பாதையை அழி';
+
+  @override
+  String get a11yLegend => 'வரைபட விளக்கக்குறிப்பு';
 }

@@ -695,4 +695,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTermsOfService => 'Terms of Service';
+
+  @override
+  String get mapDataStale =>
+      'Hazard data may be out of date. Connect to refresh.';
+
+  @override
+  String mapDataAgeDays(int days) {
+    return 'Data updated $days days ago';
+  }
+
+  @override
+  String get mapDataNeverUpdated => 'Using data bundled with the app';
+
+  @override
+  String a11yRouteSummary(
+    String shelter,
+    int distance,
+    int minutes,
+    int unsafe,
+  ) {
+    return 'Evacuation route to $shelter. $distance metres, about $minutes minutes walk. $unsafe risky road segments.';
+  }
+
+  @override
+  String a11yMapLabel(String district) {
+    return 'Evacuation map of $district. Shows classified roads, the inundation zone and shelters.';
+  }
+
+  @override
+  String get a11yMyLocation =>
+      'Find my location and route to the nearest shelter';
+
+  @override
+  String get a11yResetNorth => 'Reset map orientation to north';
+
+  @override
+  String get a11yClearRoute => 'Clear the current route';
+
+  @override
+  String get a11yLegend => 'Map legend';
 }

@@ -398,5 +398,44 @@
   "earthquakeViewOnMap": "View on Map",
   "earthquakeUsgsDetails": "USGS Details",
   "settingsPrivacyPolicy": "Privacy Policy",
-  "settingsTermsOfService": "Terms of Service"
+  "settingsTermsOfService": "Terms of Service",
+  "mapDataStale": "Hazard data may be out of date. Connect to refresh.",
+  "mapDataAgeDays": "Data updated {days} days ago",
+  "mapDataNeverUpdated": "Using data bundled with the app",
+  "@mapDataAgeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "a11yRouteSummary": "Evacuation route to {shelter}. {distance} metres, about {minutes} minutes walk. {unsafe} risky road segments.",
+  "a11yMapLabel": "Evacuation map of {district}. Shows classified roads, the inundation zone and shelters.",
+  "a11yMyLocation": "Find my location and route to the nearest shelter",
+  "a11yResetNorth": "Reset map orientation to north",
+  "a11yClearRoute": "Clear the current route",
+  "a11yLegend": "Map legend",
+  "@a11yRouteSummary": {
+    "placeholders": {
+      "shelter": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "unsafe": {
+        "type": "int"
+      }
+    }
+  },
+  "@a11yMapLabel": {
+    "placeholders": {
+      "district": {
+        "type": "String"
+      }
+    }
+  }
 }

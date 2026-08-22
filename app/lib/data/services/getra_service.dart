@@ -202,6 +202,8 @@ class GetraService {
           await _box.put(_cacheKey(d.id, entry.key), entry.value);
         }
         await _box.put(_cacheKey(d.id, 'version'), d.version);
+        await _box.put(_cacheKey(d.id, 'fetchedAt'),
+            DateTime.now().toUtc().toIso8601String());
         fromCache = false;
       } catch (e) {
         if (!hasCache) {
@@ -228,6 +230,17 @@ class GetraService {
 
   /// True when a district's bundle is already usable without the network.
   bool hasLocalBundle(District d) => _hasAllCached(d);
+
+  /// When this district's data was last refreshed from the backend, or null if
+  /// it has only ever been served from the copy bundled with the app.
+  ///
+  /// Hazard data can go stale: inundation extents get revised and shelter lists
+  /// change. Someone routing on months-old data deserves to know.
+  DateTime? lastFetched(District d) {
+    final raw = _box.get(_cacheKey(d.id, 'fetchedAt')) as String?;
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
 
   /// Per-district data versions, used to decide whether a cached bundle is
   /// stale. Much cheaper than pulling the whole registry just to compare.

@@ -1317,6 +1317,65 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Terms of Service'**
   String get settingsTermsOfService;
+
+  /// No description provided for @mapDataStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Hazard data may be out of date. Connect to refresh.'**
+  String get mapDataStale;
+
+  /// No description provided for @mapDataAgeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Data updated {days} days ago'**
+  String mapDataAgeDays(int days);
+
+  /// No description provided for @mapDataNeverUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Using data bundled with the app'**
+  String get mapDataNeverUpdated;
+
+  /// No description provided for @a11yRouteSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Evacuation route to {shelter}. {distance} metres, about {minutes} minutes walk. {unsafe} risky road segments.'**
+  String a11yRouteSummary(
+    String shelter,
+    int distance,
+    int minutes,
+    int unsafe,
+  );
+
+  /// No description provided for @a11yMapLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Evacuation map of {district}. Shows classified roads, the inundation zone and shelters.'**
+  String a11yMapLabel(String district);
+
+  /// No description provided for @a11yMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Find my location and route to the nearest shelter'**
+  String get a11yMyLocation;
+
+  /// No description provided for @a11yResetNorth.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset map orientation to north'**
+  String get a11yResetNorth;
+
+  /// No description provided for @a11yClearRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the current route'**
+  String get a11yClearRoute;
+
+  /// No description provided for @a11yLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Map legend'**
+  String get a11yLegend;
 }
 
 class _AppLocalizationsDelegate

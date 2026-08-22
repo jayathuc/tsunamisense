@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:geolocator/geolocator.dart' show Position;
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -37,12 +39,42 @@ class _MapScreenState extends State<MapScreen> {
   String? _centeredDistrict; // id of the district the map is centered on
   double _rotation = 0; // current map bearing in degrees
   StreamSubscription<MapEvent>? _mapEventSub;
+  StreamSubscription<Position>? _positionSub;
   DateTime? _handledEmergency; // declaration we've already auto-evacuated for
 
   @override
   void dispose() {
     _mapEventSub?.cancel();
+    _positionSub?.cancel();
     super.dispose();
+  }
+
+  /// Follow the user while a GPS-anchored route is showing.
+  ///
+  /// Without this the route is computed once and then frozen: someone who takes
+  /// a wrong turn keeps seeing a path from where they used to be. Updates are
+  /// throttled by distance rather than time so a stationary phone does not
+  /// recompute continuously.
+  void _startFollowing(GetraProvider p) {
+    _positionSub?.cancel();
+    _positionSub = LocationService.watch().listen((pos) async {
+      if (!mounted || !_originIsGps) return;
+      final ll = LatLng(pos.latitude, pos.longitude);
+      setState(() {
+        _gpsLocation = ll;
+        _origin = ll;
+      });
+      // Crossing into another covered district mid-evacuation should re-target.
+      await p.selectDistrictForPosition(ll.latitude, ll.longitude);
+      if (!mounted) return;
+      p.computeRoute(ll.latitude, ll.longitude,
+          emergencyDmcOnly: context.read<EmergencyProvider>().active);
+    }, onError: (e) => debugPrint('position stream error: $e'));
+  }
+
+  void _stopFollowing() {
+    _positionSub?.cancel();
+    _positionSub = null;
   }
 
   void _resetNorth() {
@@ -153,8 +185,11 @@ class _MapScreenState extends State<MapScreen> {
       final ll = LatLng(res.position!.latitude, res.position!.longitude);
       if (!mounted) return;
       setState(() => _gpsLocation = ll);
+      await p.selectDistrictForPosition(ll.latitude, ll.longitude);
+      if (!mounted) return;
       _setOrigin(ll, p, fromGps: true);
       _mapController.move(ll, 15);
+      _startFollowing(p);
       if (res.isApproximate) {
         _toast(AppLocalizations.of(context).locationApproximate);
       }
@@ -164,6 +199,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _setOrigin(LatLng ll, GetraProvider p, {bool fromGps = false}) {
+    if (!fromGps) _stopFollowing();
     setState(() {
       _origin = ll;
       _originIsGps = fromGps;
@@ -190,8 +226,11 @@ class _MapScreenState extends State<MapScreen> {
         _origin = ll;
         _originIsGps = true;
       });
+      await p.selectDistrictForPosition(ll.latitude, ll.longitude);
+      if (!mounted) return;
       p.computeRoute(ll.latitude, ll.longitude, emergencyDmcOnly: true);
       _mapController.move(ll, 15);
+      _startFollowing(p);
       if (res.isApproximate) {
         _toast(AppLocalizations.of(context).locationApproximate);
       }
@@ -201,7 +240,11 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _clear(GetraProvider p) {
-    setState(() => _origin = null);
+    _stopFollowing();
+    setState(() {
+      _origin = null;
+      _originIsGps = false;
+    });
     p.clearRoute();
   }
 
@@ -281,8 +324,18 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 ),
               if (p.isOffline && !emergency.active) const _OfflineBanner(),
+              if (!p.isOffline && !emergency.active && p.isDataStale)
+                const _StaleDataBanner(),
               if (!emergency.active)
-                Positioned(top: 12, left: 12, child: _Legend(provider: p)),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Semantics(
+                    container: true,
+                    label: AppLocalizations.of(context).a11yLegend,
+                    child: _Legend(provider: p),
+                  ),
+                ),
               // controls (compass + my location) sit above the route panel,
               // right-aligned, so they never cover the route details
               Positioned(
@@ -304,7 +357,7 @@ class _MapScreenState extends State<MapScreen> {
                               backgroundColor:
                                   Theme.of(context).colorScheme.surface,
                               foregroundColor: AppTheme.alertRed,
-                              tooltip: 'Face north',
+                              tooltip: AppLocalizations.of(context).a11yResetNorth,
                               onPressed: _resetNorth,
                               child: Transform.rotate(
                                 angle: -_rotation * math.pi / 180,
@@ -315,7 +368,7 @@ class _MapScreenState extends State<MapScreen> {
                           ],
                           FloatingActionButton.small(
                             heroTag: 'getra_location',
-                            tooltip: 'My location',
+                            tooltip: AppLocalizations.of(context).a11yMyLocation,
                             onPressed: _loadingLocation
                                 ? null
                                 : () => _useMyLocation(p),
@@ -349,7 +402,13 @@ class _MapScreenState extends State<MapScreen> {
 
   Widget _buildMap(BuildContext context, GetraProvider p, DistrictData data) {
     final route = p.route;
-    return FlutterMap(
+    // The map is a canvas with no inherent meaning to a screen reader, so it
+    // gets one description rather than thousands of unlabelled polylines.
+    return Semantics(
+      container: true,
+      label: AppLocalizations.of(context)
+          .a11yMapLabel(p.selected?.name ?? ''),
+      child: FlutterMap(
       mapController: _mapController,
       options: MapOptions(
         initialCenter: p.selected?.centerLatLng ?? const LatLng(6.0535, 80.2210),
@@ -437,6 +496,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
         ]),
       ],
+      ),
     );
   }
 
@@ -559,6 +619,39 @@ class _OfflineBanner extends StatelessWidget {
                 Flexible(
                   child: Text(
                     AppLocalizations.of(context).mapOfflineBanner,
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+}
+
+/// Warns that the hazard data on the device is old enough to be untrustworthy.
+class _StaleDataBanner extends StatelessWidget {
+  const _StaleDataBanner();
+  @override
+  Widget build(BuildContext context) => Positioned(
+        top: 0,
+        left: 0,
+        right: 0,
+        child: Material(
+          color: AppTheme.alertYellow.withValues(alpha: 0.95),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.history, size: 14, color: Colors.black87),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    AppLocalizations.of(context).mapDataStale,
                     style: const TextStyle(fontSize: 12, color: Colors.black87),
                     textAlign: TextAlign.center,
                     maxLines: 2,
@@ -1033,7 +1126,11 @@ class _RouteCard extends StatelessWidget {
                 child: Text(route.message ?? l.mapUnavailable,
                     style: Theme.of(context).textTheme.bodyMedium),
               ),
-              IconButton(icon: const Icon(Icons.close), onPressed: onClear),
+              IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: AppLocalizations.of(context).a11yClearRoute,
+                onPressed: onClear,
+              ),
             ],
           ),
         ),
@@ -1042,7 +1139,17 @@ class _RouteCard extends StatelessWidget {
 
     final safetyPct = (route.safety * 100).round();
     final safe = route.unsafeSegments == 0;
-    return Card(
+    // A screen reader would otherwise announce icons and bare numbers with no
+    // context, so the whole card reads as one sentence.
+    return Semantics(
+      container: true,
+      label: l.a11yRouteSummary(
+        route.shelterName ?? '',
+        route.distanceM,
+        route.walkMinutes,
+        route.unsafeSegments,
+      ),
+      child: Card(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
         child: Column(
@@ -1096,6 +1203,7 @@ class _RouteCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
