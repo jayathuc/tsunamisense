@@ -46,7 +46,17 @@ uvicorn main:app --reload --port 8000
 | GET | `/districts/{id}/shelters` | shelters (GeoJSON) |
 | GET | `/districts/{id}/nodes` | node id → [lon, lat] (for offline route tracing) |
 | GET | `/districts/{id}/evac_basin` | per-strategy nearest-shelter route tree (offline payload) |
-| GET | `/districts/{id}/route?lat=&lng=&strategy=&set=` | live route trace to nearest shelter |
+| POST | `/districts/{id}/route` | live route trace to nearest shelter (preferred) |
+| GET | `/districts/{id}/route?lat=&lng=&strategy=&set=` | same, kept for compatibility |
+
+Prefer the POST form. It takes the same parameters as a JSON body:
+
+```json
+{ "lat": 6.0335, "lng": 80.2170, "strategy": "safest", "set": "dmc" }
+```
+
+Coordinates in a query string end up in access logs and proxy caches; in a body
+they do not. The GET form remains for compatibility and quick manual testing.
 
 `strategy` ∈ `shortest | balanced | safest` (default `safest`).
 

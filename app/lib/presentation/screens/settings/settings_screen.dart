@@ -572,33 +572,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               '''Privacy Policy for TsunamiSense
 
-Last updated: January 2025
+Last updated: August 2026
 
-1. Information We Collect
-We collect minimal information to provide the app's functionality:
-- Location data (optional, for showing your position on maps)
-- App usage analytics (anonymous)
+TsunamiSense is academic research software produced as a final-year project. It
+is not an official warning system.
 
-2. How We Use Your Information
-- To provide real-time earthquake alerts
-- To show your location relative to safe zones
-- To improve app functionality
+1. What stays on your device
+- Your position is read only while you ask for a route or view the map. It is
+  not recorded, and no location history is kept.
+- Your preparedness checklist, lesson progress and settings are stored locally
+  and are never uploaded.
+- Map data, shelters and routing tables are cached on the device so the app
+  works offline. Evacuation routes are calculated on your phone.
 
-3. Data Storage
-- All checklist data is stored locally on your device
-- We do not store personal information on our servers
+2. What leaves your device
+- If the app cannot calculate a route locally, it may send a single set of
+  coordinates to the GETRA routing service to request one. Those coordinates
+  are used to answer that request and are not linked to any identifier.
+- Requesting map tiles and earthquake data necessarily reveals your device's IP
+  address to those providers, as with any web request.
 
-4. Third-Party Services
-We use the following services:
-- USGS for earthquake data
-- OpenStreetMap for map tiles
-- Firebase for notifications (optional)
+3. What we do not do
+- No analytics, tracking or advertising.
+- No accounts, and no personal information is collected.
+- Nothing is sold or shared with third parties.
 
-5. Contact Us
-For questions about this privacy policy, please contact us at:
-tsunamisense@fyp.edu
+4. Third-party services
+- USGS: earthquake data
+- GDACS: official tsunami bulletins
+- OpenStreetMap and CARTO: map tiles
+- GETRA API: hazard data and optional routing
 
-This app does not collect sensitive personal information.''',
+5. Permissions
+- Location: to place you on the map and route you to shelter.
+- Notifications: to alert you to earthquakes and tsunami warnings, including
+  while the app is closed.
+
+6. Contact
+tsunamisense@fyp.edu''',
               style: TextStyle(height: 1.6),
             ),
           ),

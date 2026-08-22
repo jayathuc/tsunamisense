@@ -23,7 +23,7 @@ import math
 import os
 from typing import Dict, Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -39,7 +39,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # public read-only data; tighten per-deployment if needed
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 # Compress the large GeoJSON / basin payloads (~9x smaller over the wire).
@@ -222,14 +222,7 @@ def evac_basin(district: str):
     return _file(district, "evac_basin.json")
 
 
-@app.get("/districts/{district}/route")
-def route(
-    district: str,
-    lat: float = Query(..., ge=-90, le=90),
-    lng: float = Query(..., ge=-180, le=180),
-    strategy: str = Query("safest"),
-    set: Optional[str] = Query(None, description="shelter set, e.g. 'dmc', 'dmc+literature', 'osm'"),
-):
+def _trace_route(district: str, lat: float, lng: float, strategy: str, set: Optional[str]):
     """Snap a GPS point to the nearest road node and trace the precomputed
     evacuation route to its nearest shelter. Mirrors the app's offline logic."""
     if strategy not in STRATEGIES:
@@ -301,3 +294,34 @@ def route(
         "safety": info["safety"],
         "geometry": {"type": "LineString", "coordinates": coords},
     }
+
+
+@app.post("/districts/{district}/route")
+def route_post(
+    district: str,
+    body: Dict = Body(..., example={"lat": 6.0335, "lng": 80.2170, "strategy": "safest"}),
+):
+    """Preferred over the GET form: coordinates travel in the body rather than
+    the URL, so a user's precise position does not end up in server access logs
+    or proxy caches."""
+    try:
+        lat = float(body["lat"])
+        lng = float(body["lng"])
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(status_code=422, detail="body must contain numeric 'lat' and 'lng'")
+    if not (-90 <= lat <= 90) or not (-180 <= lng <= 180):
+        raise HTTPException(status_code=422, detail="lat/lng out of range")
+    return _trace_route(district, lat, lng, body.get("strategy", "safest"), body.get("set"))
+
+
+@app.get("/districts/{district}/route")
+def route(
+    district: str,
+    lat: float = Query(..., ge=-90, le=90),
+    lng: float = Query(..., ge=-180, le=180),
+    strategy: str = Query("safest"),
+    set: Optional[str] = Query(None, description="shelter set, e.g. 'dmc', 'dmc+literature', 'osm'"),
+):
+    """Kept for compatibility. Prefer POST: this form puts the caller's
+    coordinates in the URL, where they are logged."""
+    return _trace_route(district, lat, lng, strategy, set)

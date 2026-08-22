@@ -264,17 +264,25 @@ class GetraService {
     RouteStrategy strategy, {
     String? shelterSet,
   }) async {
-    final uri = Uri.parse('$_base/districts/${d.id}/route').replace(
-      queryParameters: {
-        'lat': '$lat',
-        'lng': '$lng',
-        'strategy': strategy.id,
-        if (shelterSet != null) 'set': shelterSet,
-      },
-    );
-    final body = await _getBody(uri.toString());
+    // POST rather than GET: the caller's precise coordinates travel in the body
+    // instead of the URL, so they do not land in server access logs or proxy
+    // caches. The backend keeps a GET form for compatibility.
+    final uri = Uri.parse('$_base/districts/${d.id}/route');
+    final body = jsonEncode({
+      'lat': lat,
+      'lng': lng,
+      'strategy': strategy.id,
+      if (shelterSet != null) 'set': shelterSet,
+    });
+    debugPrint('[GETRA] POST $uri');
+    final res = await _client
+        .post(uri, headers: {'Content-Type': 'application/json'}, body: body)
+        .timeout(timeout);
+    if (res.statusCode != 200) {
+      throw GetraException('HTTP ${res.statusCode} for $uri');
+    }
     return EvacuationRoute.fromApi(
-      jsonDecode(body) as Map<String, dynamic>,
+      jsonDecode(res.body) as Map<String, dynamic>,
       strategy,
     );
   }
