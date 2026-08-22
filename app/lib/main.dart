@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,6 +9,7 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'l10n/app_localizations.dart';
 import 'data/services/getra_service.dart';
+import 'data/services/background_monitor.dart';
 import 'data/services/notification_service.dart';
 import 'data/services/warning_service.dart';
 import 'providers/app_settings_provider.dart';
@@ -31,6 +33,13 @@ Future<void> main() async {
   await Hive.initFlutter();
   await GetraService.initCache();
   await NotificationService.init();
+  // Keeps checking for a tsunami threat after the app is closed. Best effort:
+  // a failure here must never stop the app from starting.
+  try {
+    await BackgroundMonitor.register();
+  } catch (e) {
+    debugPrint('background monitor unavailable: $e');
+  }
   runApp(const TsunamiSenseApp());
 }
 
@@ -77,7 +86,8 @@ class MainNavigationScreen extends StatefulWidget {
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class _MainNavigationScreenState extends State<MainNavigationScreen>
+    with WidgetsBindingObserver {
   Timer? _monitorTimer;
   String? _lang; // last language the lessons/checklist were loaded for
   final WarningService _warningService = WarningService();
@@ -93,6 +103,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Deferred to after the first frame: the providers notify their listeners
     // synchronously as soon as they start loading, which is illegal during
     // build and throws "setState() called during build".
@@ -103,9 +114,25 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _monitorTimer?.cancel();
     _warningService.dispose();
     super.dispose();
+  }
+
+  /// Android suspends timers while the app is backgrounded, so whatever the
+  /// screen showed on the way out may be hours stale by the time the user
+  /// returns. Refresh immediately on resume and restart the poll; stop it while
+  /// hidden so we are not firing requests the user cannot see.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _poll();
+      _startMonitoring();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _monitorTimer?.cancel();
+    }
   }
 
   Future<void> _initializeData() async {
