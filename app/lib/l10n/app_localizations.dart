@@ -1257,6 +1257,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Designate a meeting point in case family members are separated.'**
   String get prepareTip5Body;
+
+  /// No description provided for @mapTsunamiWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'TSUNAMI WARNING'**
+  String get mapTsunamiWarning;
+
+  /// No description provided for @mapOfflineBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline, saved map'**
+  String get mapOfflineBanner;
+
+  /// No description provided for @mapEvacuationMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Evacuation Map'**
+  String get mapEvacuationMap;
+
+  /// No description provided for @commonTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get commonTryAgain;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get openSettings;
+
+  /// No description provided for @locationApproximate.
+  ///
+  /// In en, this message translates to:
+  /// **'Using your last known location; it may be approximate.'**
+  String get locationApproximate;
+
+  /// No description provided for @earthquakeViewOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'View on Map'**
+  String get earthquakeViewOnMap;
+
+  /// No description provided for @earthquakeUsgsDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'USGS Details'**
+  String get earthquakeUsgsDetails;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @settingsTermsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get settingsTermsOfService;
 }
 
 class _AppLocalizationsDelegate

@@ -664,4 +664,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get prepareTip5Body =>
       'Designate a meeting point in case family members are separated.';
+
+  @override
+  String get mapTsunamiWarning => 'TSUNAMI WARNING';
+
+  @override
+  String get mapOfflineBanner => 'Offline, saved map';
+
+  @override
+  String get mapEvacuationMap => 'Evacuation Map';
+
+  @override
+  String get commonTryAgain => 'Try again';
+
+  @override
+  String get openSettings => 'Open settings';
+
+  @override
+  String get locationApproximate =>
+      'Using your last known location; it may be approximate.';
+
+  @override
+  String get earthquakeViewOnMap => 'View on Map';
+
+  @override
+  String get earthquakeUsgsDetails => 'USGS Details';
+
+  @override
+  String get settingsPrivacyPolicy => 'Privacy Policy';
+
+  @override
+  String get settingsTermsOfService => 'Terms of Service';
 }

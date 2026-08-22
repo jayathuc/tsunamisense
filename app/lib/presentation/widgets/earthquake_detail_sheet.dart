@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/earthquake.dart';
@@ -165,7 +166,7 @@ class EarthquakeDetailSheet extends StatelessWidget {
                     'Could not open maps',
                   ),
                   icon: const Icon(Icons.map),
-                  label: const Text('View on Map'),
+                  label: Text(AppLocalizations.of(context).earthquakeViewOnMap),
                 ),
               ),
               const SizedBox(width: 12),
@@ -177,7 +178,7 @@ class EarthquakeDetailSheet extends StatelessWidget {
                     'No USGS page available for this event',
                   ),
                   icon: const Icon(Icons.open_in_new),
-                  label: const Text('USGS Details'),
+                  label: Text(AppLocalizations.of(context).earthquakeUsgsDetails),
                 ),
               ),
             ],

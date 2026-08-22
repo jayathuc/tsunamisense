@@ -669,4 +669,35 @@ class AppLocalizationsTa extends AppLocalizations {
   @override
   String get prepareTip5Body =>
       'குடும்ப உறுப்பினர்கள் பிரிந்தால் சந்திக்க ஒரு இடத்தைக் குறிக்கவும்.';
+
+  @override
+  String get mapTsunamiWarning => 'சுனாமி எச்சரிக்கை';
+
+  @override
+  String get mapOfflineBanner => 'ஆஃப்லைன், சேமித்த வரைபடம்';
+
+  @override
+  String get mapEvacuationMap => 'வெளியேற்ற வரைபடம்';
+
+  @override
+  String get commonTryAgain => 'மீண்டும் முயற்சிக்கவும்';
+
+  @override
+  String get openSettings => 'அமைப்புகளைத் திற';
+
+  @override
+  String get locationApproximate =>
+      'உங்கள் கடைசியாக அறியப்பட்ட இடம் பயன்படுத்தப்படுகிறது; இது தோராயமாக இருக்கலாம்.';
+
+  @override
+  String get earthquakeViewOnMap => 'வரைபடத்தில் காண்க';
+
+  @override
+  String get earthquakeUsgsDetails => 'USGS விவரங்கள்';
+
+  @override
+  String get settingsPrivacyPolicy => 'தனியுரிமைக் கொள்கை';
+
+  @override
+  String get settingsTermsOfService => 'சேவை விதிமுறைகள்';
 }

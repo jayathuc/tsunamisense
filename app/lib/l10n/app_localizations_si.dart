@@ -667,4 +667,35 @@ class AppLocalizationsSi extends AppLocalizations {
   @override
   String get prepareTip5Body =>
       'පවුලේ අය වෙන් වුවහොත් හමුවන ස්ථානයක් නියම කරන්න.';
+
+  @override
+  String get mapTsunamiWarning => 'සුනාමි අනතුරු ඇඟවීම';
+
+  @override
+  String get mapOfflineBanner => 'නොබැඳි, සුරකින ලද සිතියම';
+
+  @override
+  String get mapEvacuationMap => 'ඉවත් වීමේ සිතියම';
+
+  @override
+  String get commonTryAgain => 'නැවත උත්සාහ කරන්න';
+
+  @override
+  String get openSettings => 'සැකසුම් විවෘත කරන්න';
+
+  @override
+  String get locationApproximate =>
+      'ඔබේ අවසන් දන්නා ස්ථානය භාවිතා කරයි; එය ආසන්න විය හැක.';
+
+  @override
+  String get earthquakeViewOnMap => 'සිතියමේ බලන්න';
+
+  @override
+  String get earthquakeUsgsDetails => 'USGS විස්තර';
+
+  @override
+  String get settingsPrivacyPolicy => 'රහස්‍යතා ප්‍රතිපත්තිය';
+
+  @override
+  String get settingsTermsOfService => 'සේවා කොන්දේසි';
 }

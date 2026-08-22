@@ -1,27 +1,42 @@
 {
   "@@locale": "en",
-
   "poweredByGetra": "Powered by GETRA",
   "navHome": "Home",
   "navLearn": "Learn",
   "navMap": "Map",
   "navPrepare": "Prepare",
   "navSettings": "Settings",
-
   "commonClose": "Close",
   "commonCancel": "Cancel",
   "commonClear": "Clear",
   "commonOk": "OK",
   "commonRetry": "Retry",
-
   "homeCurrentStatus": "Current Status",
   "homeLastUpdated": "Last updated: {time}",
-  "@homeLastUpdated": { "placeholders": { "time": { "type": "String" } } },
+  "@homeLastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "homeJustNow": "Just now",
   "homeMinutesAgo": "{m}m ago",
-  "@homeMinutesAgo": { "placeholders": { "m": { "type": "int" } } },
+  "@homeMinutesAgo": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
   "homeHoursAgo": "{h}h ago",
-  "@homeHoursAgo": { "placeholders": { "h": { "type": "int" } } },
+  "@homeHoursAgo": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      }
+    }
+  },
   "homeQuickActions": "Quick Actions",
   "homeFindSafeZone": "Find Safe Zone",
   "homeBePrepared": "Be Prepared",
@@ -31,8 +46,13 @@
   "homeLessons": "Lessons",
   "homePrepared": "Prepared",
   "homeDepthKm": "Depth: {km} km",
-  "@homeDepthKm": { "placeholders": { "km": { "type": "int" } } },
-
+  "@homeDepthKm": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
   "alertNoThreat": "No Threat",
   "alertAdvisory": "Advisory",
   "alertWarning": "Warning",
@@ -41,7 +61,6 @@
   "alertAdvisoryDesc": "Earthquake detected. Be prepared and monitor updates.",
   "alertWarningDesc": "Tsunami possible. Prepare to evacuate if near coast.",
   "alertEmergencyDesc": "TSUNAMI CONFIRMED. Evacuate immediately to high ground!",
-
   "settingsTitle": "Settings",
   "sectionNotifications": "Notifications",
   "enableNotifications": "Enable Notifications",
@@ -50,31 +69,31 @@
   "soundSubtitle": "Play alert sound for notifications",
   "vibrationLabel": "Vibration",
   "vibrationSubtitle": "Vibrate for notifications",
-
   "sectionAlertSettings": "Alert Settings",
   "alertRadius": "Alert Radius",
   "alertRadiusValue": "{km} km from Sri Lanka coast",
   "@alertRadiusValue": {
-    "placeholders": { "km": { "type": "int" } }
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
   },
   "showAllEarthquakes": "Show All Earthquakes",
   "showAllEarthquakesSubtitle": "Include earthquakes below M5.0",
   "testAlert": "Test Alert",
   "testAlertSubtitle": "Send a test notification",
   "testNotificationSent": "Test notification sent",
-
   "sectionDisplay": "Display",
   "language": "Language",
   "selectLanguage": "Select Language",
   "darkMode": "Dark Mode",
   "darkModeSubtitle": "Use dark theme",
-
   "sectionEvacuationMap": "Evacuation Map",
   "showResearchShelters": "Show research-supported shelters",
   "showResearchSheltersSubtitle": "Also show last-resort shelters identified in published research. DMC-verified shelters are always shown.",
   "showOsmShelters": "Show OpenStreetMap shelters",
   "showOsmSheltersSubtitle": "Auto-identified public buildings (schools, temples, hospitals) on high ground. Unverified.",
-
   "sectionDataStorage": "Data & Storage",
   "offlineMode": "Offline Maps",
   "offlineModeSubtitle": "Download map tiles for the current district",
@@ -85,45 +104,59 @@
   "cacheCleared": "Cache cleared successfully",
   "clearCacheTitle": "Clear Cache?",
   "clearCacheBody": "This will remove cached map tiles and data. You may need to re-download them for offline use.",
-
   "sectionDeveloper": "Developer",
   "developerMode": "Developer mode",
   "developerModeSubtitle": "Show simulate/test controls used for demos and testing.",
-
   "sectionAbout": "About",
   "aboutTsunamiSense": "About TsunamiSense",
   "privacyPolicy": "Privacy Policy",
   "termsOfService": "Terms of Service",
   "openSourceLicenses": "Open Source Licenses",
-
   "sectionEmergencyContacts": "Emergency Contacts",
   "contactNationalDisaster": "National Disaster Management",
   "contactPolice": "Police Emergency",
   "contactAmbulance": "Ambulance Service",
   "contactFire": "Fire & Rescue",
-
   "offlineDownloadTitle": "Download offline maps",
   "offlineDownloadBody": "Map tiles for {district} will be downloaded so the map works with no internet. This may use several megabytes.",
   "@offlineDownloadBody": {
-    "placeholders": { "district": { "type": "String" } }
+    "placeholders": {
+      "district": {
+        "type": "String"
+      }
+    }
   },
   "offlineDownloadStart": "Download",
   "offlineDownloading": "Downloading map tiles…",
   "offlineDownloadProgress": "{done} of {total} tiles",
   "@offlineDownloadProgress": {
-    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
   },
   "offlineDownloadDone": "Offline maps ready for {district}",
   "@offlineDownloadDone": {
-    "placeholders": { "district": { "type": "String" } }
+    "placeholders": {
+      "district": {
+        "type": "String"
+      }
+    }
   },
   "offlineDownloadFailed": "Download did not finish. Please try again on a better connection.",
-
   "mapTitle": "Evacuation Map",
   "mapTapToRoute": "Tap “My location”, or tap anywhere on the map, to find the safest route to a shelter.",
   "mapToShelter": "To {shelter}",
   "@mapToShelter": {
-    "placeholders": { "shelter": { "type": "String" } }
+    "placeholders": {
+      "shelter": {
+        "type": "String"
+      }
+    }
   },
   "mapNearestShelter": "nearest shelter",
   "mapOsmUnverified": "OpenStreetMap shelters are auto-identified and unverified.",
@@ -148,33 +181,54 @@
   "districtTangalle": "Tangalle",
   "mapMinutesShort": "~{minutes} min",
   "@mapMinutesShort": {
-    "placeholders": { "minutes": { "type": "int" } }
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "mapPctSafe": "{pct}% safe",
   "@mapPctSafe": {
-    "placeholders": { "pct": { "type": "int" } }
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
   },
   "mapPctRisky": "{pct}% • {n} risky",
   "@mapPctRisky": {
-    "placeholders": { "pct": { "type": "int" }, "n": { "type": "int" } }
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
   },
   "mapRouteHeading": "{strategy} route",
   "@mapRouteHeading": {
-    "placeholders": { "strategy": { "type": "String" } }
+    "placeholders": {
+      "strategy": {
+        "type": "String"
+      }
+    }
   },
   "mapDistrictTitle": "{district} Map",
   "@mapDistrictTitle": {
-    "placeholders": { "district": { "type": "String" } }
+    "placeholders": {
+      "district": {
+        "type": "String"
+      }
+    }
   },
   "mapLoading": "Loading evacuation map…",
   "mapUnavailable": "Map unavailable.",
-
   "locationPermissionDenied": "Location permission is off. Enable it in Settings, or tap the map to set a start point.",
   "locationServicesOff": "Location services are off. Turn on GPS, or tap the map to set a start point.",
   "locationUnavailable": "Could not get a location fix. Tap the map to set a start point.",
   "locationPermissionDeniedEmergency": "Location permission is off. Enable it in Settings to get your evacuation route, or tap the map.",
   "locationServicesOffEmergency": "Location services are off. Turn on GPS to get your evacuation route, or tap the map.",
-
   "emergencyTitle": "TSUNAMI WARNING",
   "emergencyEvacuateNow": "Evacuate now",
   "emergencyLocating": "Locating you…",
@@ -182,56 +236,119 @@
   "emergencyMoveInland": "Move inland and uphill, away from the coast.",
   "emergencyArrivalEstimate": "Wave in ~{minutes} min",
   "@emergencyArrivalEstimate": {
-    "placeholders": { "minutes": { "type": "int" } }
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
   },
   "emergencyDemoModel": "Estimated • demonstration model",
   "emergencyEndDrill": "End drill",
   "emergencyFollowRoute": "Follow the route to {shelter}; move inland and uphill.",
   "@emergencyFollowRoute": {
-    "placeholders": { "shelter": { "type": "String" } }
+    "placeholders": {
+      "shelter": {
+        "type": "String"
+      }
+    }
   },
   "emergencyMayNotReach": "You may not reach {shelter} in time. Move inland and uphill to the nearest high ground now.",
   "@emergencyMayNotReach": {
-    "placeholders": { "shelter": { "type": "String" } }
+    "placeholders": {
+      "shelter": {
+        "type": "String"
+      }
+    }
   },
-
   "commonNext": "Next",
   "commonAdd": "Add",
   "commonReset": "Reset",
   "commonRemove": "Remove",
   "commonSave": "Save",
-
   "learnCompletedCount": "{done}/{total} completed",
-  "@learnCompletedCount": { "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } } },
+  "@learnCompletedCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "learnNoLessons": "No lessons available",
   "learnLessons": "Lessons",
   "learnProgressTitle": "Your Learning Progress",
   "learnPercentComplete": "{pct}% Complete",
-  "@learnPercentComplete": { "placeholders": { "pct": { "type": "int" } } },
+  "@learnPercentComplete": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "learnStartPrompt": "Start your first lesson to learn how to stay safe!",
   "learnKeepGoing": "Keep going! You are doing great!",
   "learnAllDone": "All lessons completed! You are well prepared.",
   "learnMinutes": "{min} min",
-  "@learnMinutes": { "placeholders": { "min": { "type": "int" } } },
+  "@learnMinutes": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
   "learnMinRead": "{min} min read",
-  "@learnMinRead": { "placeholders": { "min": { "type": "int" } } },
+  "@learnMinRead": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
   "learnQuiz": "Quiz",
   "learnLessonNumber": "Lesson {n}",
-  "@learnLessonNumber": { "placeholders": { "n": { "type": "int" } } },
+  "@learnLessonNumber": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "learnTakeQuiz": "Take Quiz",
   "learnCompleted": "Completed ✓",
   "learnMarkComplete": "Mark as Complete",
   "learnQuestionOf": "Question {n} of {total}",
-  "@learnQuestionOf": { "placeholders": { "n": { "type": "int" }, "total": { "type": "int" } } },
+  "@learnQuestionOf": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "learnSeeResults": "See Results",
   "learnGreatJob": "Great Job!",
   "learnKeepLearning": "Keep Learning",
   "learnScore": "You got {correct} out of {total} correct ({pct}%)",
-  "@learnScore": { "placeholders": { "correct": { "type": "int" }, "total": { "type": "int" }, "pct": { "type": "int" } } },
+  "@learnScore": {
+    "placeholders": {
+      "correct": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "learnCompleteLesson": "Complete Lesson",
   "learnReviewLesson": "Review Lesson",
   "learnLessonDoneToast": "Lesson completed!",
-
   "prepareTitle": "Prepare",
   "prepareResetTooltip": "Reset checklist",
   "prepareShareTooltip": "Share checklist",
@@ -248,7 +365,16 @@
   "prepareCompleteMsg": "Great job! You have everything ready for an emergency.",
   "prepareIncompleteMsg": "Complete the checklist to ensure you are ready for emergencies.",
   "prepareItemsComplete": "{done} of {total} complete",
-  "@prepareItemsComplete": { "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } } },
+  "@prepareItemsComplete": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "prepareRequired": "Required",
   "prepareNoteTitle": "Add a note",
   "prepareNoteHint": "Add a note (e.g., location, expiry date)",
@@ -262,5 +388,15 @@
   "prepareTip4Title": "Family Plan",
   "prepareTip4Body": "Discuss and practice evacuation routes with your family.",
   "prepareTip5Title": "Meeting Point",
-  "prepareTip5Body": "Designate a meeting point in case family members are separated."
+  "prepareTip5Body": "Designate a meeting point in case family members are separated.",
+  "mapTsunamiWarning": "TSUNAMI WARNING",
+  "mapOfflineBanner": "Offline, saved map",
+  "mapEvacuationMap": "Evacuation Map",
+  "commonTryAgain": "Try again",
+  "openSettings": "Open settings",
+  "locationApproximate": "Using your last known location; it may be approximate.",
+  "earthquakeViewOnMap": "View on Map",
+  "earthquakeUsgsDetails": "USGS Details",
+  "settingsPrivacyPolicy": "Privacy Policy",
+  "settingsTermsOfService": "Terms of Service"
 }

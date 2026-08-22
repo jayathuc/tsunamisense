@@ -1,19 +1,16 @@
 {
   "@@locale": "si",
-
   "poweredByGetra": "GETRA මගින් බලගැන්වේ",
   "navHome": "මුල් පිටුව",
   "navLearn": "ඉගෙනුම",
   "navMap": "සිතියම",
   "navPrepare": "සූදානම",
   "navSettings": "සැකසුම්",
-
   "commonClose": "වසන්න",
   "commonCancel": "අවලංගු කරන්න",
   "commonClear": "හිස් කරන්න",
   "commonOk": "හරි",
   "commonRetry": "නැවත උත්සාහ කරන්න",
-
   "homeCurrentStatus": "වත්මන් තත්ත්වය",
   "homeLastUpdated": "අවසන් යාවත්කාලීනය: {time}",
   "homeJustNow": "මේ දැන්",
@@ -28,7 +25,6 @@
   "homeLessons": "පාඩම්",
   "homePrepared": "සූදානම",
   "homeDepthKm": "ගැඹුර: කි.මී. {km}",
-
   "alertNoThreat": "තර්ජනයක් නැත",
   "alertAdvisory": "උපදේශනය",
   "alertWarning": "අනතුරු ඇඟවීම",
@@ -37,7 +33,6 @@
   "alertAdvisoryDesc": "භූමිකම්පාවක් හඳුනාගැනිණි. සූදානම්ව යාවත්කාලීන නිරීක්ෂණය කරන්න.",
   "alertWarningDesc": "සුනාමියක් සිදුවිය හැක. වෙරළට ආසන්න නම් ඉවත් වීමට සූදානම් වන්න.",
   "alertEmergencyDesc": "සුනාමිය තහවුරුයි. වහාම උස් බිමකට ඉවත් වන්න!",
-
   "settingsTitle": "සැකසුම්",
   "sectionNotifications": "දැනුම්දීම්",
   "enableNotifications": "දැනුම්දීම් සක්‍රීය කරන්න",
@@ -46,7 +41,6 @@
   "soundSubtitle": "දැනුම්දීම් සඳහා අනතුරු ඇඟවීමේ ශබ්දය වාදනය කරන්න",
   "vibrationLabel": "කම්පනය",
   "vibrationSubtitle": "දැනුම්දීම් සඳහා කම්පනය කරන්න",
-
   "sectionAlertSettings": "අනතුරු ඇඟවීම් සැකසුම්",
   "alertRadius": "අනතුරු ඇඟවීමේ පරාසය",
   "alertRadiusValue": "ශ්‍රී ලංකා වෙරළ තීරයේ සිට කි.මී. {km}",
@@ -55,19 +49,16 @@
   "testAlert": "පරීක්ෂණ අනතුරු ඇඟවීම",
   "testAlertSubtitle": "පරීක්ෂණ දැනුම්දීමක් යවන්න",
   "testNotificationSent": "පරීක්ෂණ දැනුම්දීම යවන ලදී",
-
   "sectionDisplay": "සංදර්ශනය",
   "language": "භාෂාව",
   "selectLanguage": "භාෂාව තෝරන්න",
   "darkMode": "අඳුරු තේමාව",
   "darkModeSubtitle": "අඳුරු තේමාව භාවිතා කරන්න",
-
   "sectionEvacuationMap": "ඉවත් වීමේ සිතියම",
   "showResearchShelters": "පර්යේෂණ-සහාය නවාතැන් පෙන්වන්න",
   "showResearchSheltersSubtitle": "ප්‍රකාශිත පර්යේෂණවල හඳුනාගත් අවසන් විකල්ප නවාතැන් ද පෙන්වන්න. DMC-තහවුරු කළ නවාතැන් සැමවිටම පෙන්වයි.",
   "showOsmShelters": "OpenStreetMap නවාතැන් පෙන්වන්න",
   "showOsmSheltersSubtitle": "උස් බිමෙහි ස්වයංක්‍රීයව හඳුනාගත් පොදු ගොඩනැගිලි (පාසල්, විහාර, රෝහල්). තහවුරු නොකළ.",
-
   "sectionDataStorage": "දත්ත සහ ගබඩාව",
   "offlineMode": "නොබැඳි සිතියම්",
   "offlineModeSubtitle": "වත්මන් දිස්ත්‍රික්කය සඳහා සිතියම් ටයිල් බාගන්න",
@@ -78,23 +69,19 @@
   "cacheCleared": "හැඹිලිය සාර්ථකව හිස් කරන ලදී",
   "clearCacheTitle": "හැඹිලිය හිස් කරන්නද?",
   "clearCacheBody": "මෙය හැඹිලිගත සිතියම් ටයිල් සහ දත්ත ඉවත් කරයි. නොබැඳිව භාවිතයට ඒවා නැවත බාගත කිරීමට අවශ්‍ය විය හැක.",
-
   "sectionDeveloper": "සංවර්ධක",
   "developerMode": "සංවර්ධක ප්‍රකාරය",
   "developerModeSubtitle": "ආදර්ශන සහ පරීක්ෂණ සඳහා භාවිතා කරන අනුකරණ/පරීක්ෂණ පාලන පෙන්වන්න.",
-
   "sectionAbout": "පිළිබඳව",
   "aboutTsunamiSense": "TsunamiSense පිළිබඳව",
   "privacyPolicy": "පෞද්ගලිකත්ව ප්‍රතිපත්තිය",
   "termsOfService": "සේවා කොන්දේසි",
   "openSourceLicenses": "විවෘත මූලාශ්‍ර බලපත්‍ර",
-
   "sectionEmergencyContacts": "හදිසි ඇමතුම්",
   "contactNationalDisaster": "ජාතික ආපදා කළමනාකරණය",
   "contactPolice": "පොලිස් හදිසි අංශය",
   "contactAmbulance": "ගිලන්රථ සේවාව",
   "contactFire": "ගිනි නිවීම් හා ගලවා ගැනීම්",
-
   "offlineDownloadTitle": "නොබැඳි සිතියම් බාගන්න",
   "offlineDownloadBody": "අන්තර්ජාලය නොමැතිව සිතියම ක්‍රියා කිරීමට {district} සඳහා සිතියම් ටයිල් බාගනු ලැබේ. මෙය මෙගාබයිට් කිහිපයක් භාවිතා කළ හැක.",
   "offlineDownloadStart": "බාගන්න",
@@ -102,7 +89,6 @@
   "offlineDownloadProgress": "ටයිල් {total} කින් {done}",
   "offlineDownloadDone": "{district} සඳහා නොබැඳි සිතියම් සූදානම්",
   "offlineDownloadFailed": "බාගැනීම සම්පූර්ණ නොවීය. වඩා හොඳ සම්බන්ධතාවයකින් නැවත උත්සාහ කරන්න.",
-
   "mapTitle": "ඉවත් වීමේ සිතියම",
   "mapTapToRoute": "නවාතැනකට ආරක්ෂිතම මාර්ගය සොයා ගැනීමට “මගේ ස්ථානය” තට්ටු කරන්න, නැතහොත් සිතියමේ ඕනෑම තැනක තට්ටු කරන්න.",
   "mapToShelter": "{shelter} වෙත",
@@ -134,13 +120,11 @@
   "mapDistrictTitle": "{district} සිතියම",
   "mapLoading": "ඉවත් වීමේ සිතියම පූරණය වෙමින්…",
   "mapUnavailable": "සිතියම නොමැත.",
-
   "locationPermissionDenied": "ස්ථාන අවසරය ක්‍රියා විරහිතයි. සැකසුම් තුළ එය සක්‍රීය කරන්න, නැතහොත් ආරම්භක ස්ථානයක් සැකසීමට සිතියම තට්ටු කරන්න.",
   "locationServicesOff": "ස්ථාන සේවා ක්‍රියා විරහිතයි. GPS සක්‍රීය කරන්න, නැතහොත් ආරම්භක ස්ථානයක් සැකසීමට සිතියම තට්ටු කරන්න.",
   "locationUnavailable": "ස්ථානය ලබා ගත නොහැකි විය. ආරම්භක ස්ථානයක් සැකසීමට සිතියම තට්ටු කරන්න.",
   "locationPermissionDeniedEmergency": "ස්ථාන අවසරය ක්‍රියා විරහිතයි. ඔබේ ඉවත් වීමේ මාර්ගය ලබා ගැනීමට සැකසුම් තුළ එය සක්‍රීය කරන්න, නැතහොත් සිතියම තට්ටු කරන්න.",
   "locationServicesOffEmergency": "ස්ථාන සේවා ක්‍රියා විරහිතයි. ඔබේ ඉවත් වීමේ මාර්ගය ලබා ගැනීමට GPS සක්‍රීය කරන්න, නැතහොත් සිතියම තට්ටු කරන්න.",
-
   "emergencyTitle": "සුනාමි අනතුරු ඇඟවීම",
   "emergencyEvacuateNow": "දැන්ම ඉවත් වන්න",
   "emergencyLocating": "ඔබව සොයමින්…",
@@ -151,13 +135,11 @@
   "emergencyEndDrill": "පුහුණුව අවසන් කරන්න",
   "emergencyFollowRoute": "{shelter} වෙත මාර්ගය අනුගමනය කරන්න; අභ්‍යන්තරයට හා උස් බිමට යන්න.",
   "emergencyMayNotReach": "ඔබට {shelter} වෙත කාලයට ළඟා විය නොහැකි විය හැක. දැන්ම ආසන්නම උස් බිමට, අභ්‍යන්තරයට යන්න.",
-
   "commonNext": "ඊළඟ",
   "commonAdd": "එක් කරන්න",
   "commonReset": "යළි සකසන්න",
   "commonRemove": "ඉවත් කරන්න",
   "commonSave": "සුරකින්න",
-
   "learnCompletedCount": "{total}කින් {done} සම්පූර්ණයි",
   "learnNoLessons": "පාඩම් නොමැත",
   "learnLessons": "පාඩම්",
@@ -181,7 +163,6 @@
   "learnCompleteLesson": "පාඩම සම්පූර්ණ කරන්න",
   "learnReviewLesson": "පාඩම නැවත බලන්න",
   "learnLessonDoneToast": "පාඩම සම්පූර්ණයි!",
-
   "prepareTitle": "සූදානම් වන්න",
   "prepareResetTooltip": "පිරික්සුම් ලැයිස්තුව යළි සකසන්න",
   "prepareShareTooltip": "පිරික්සුම් ලැයිස්තුව බෙදා ගන්න",
@@ -211,5 +192,15 @@
   "prepareTip4Title": "පවුල් සැලැස්ම",
   "prepareTip4Body": "ඔබේ පවුල සමඟ ඉවත් වීමේ මාර්ග සාකච්ඡා කර පුහුණු වන්න.",
   "prepareTip5Title": "හමුවන ස්ථානය",
-  "prepareTip5Body": "පවුලේ අය වෙන් වුවහොත් හමුවන ස්ථානයක් නියම කරන්න."
+  "prepareTip5Body": "පවුලේ අය වෙන් වුවහොත් හමුවන ස්ථානයක් නියම කරන්න.",
+  "mapTsunamiWarning": "සුනාමි අනතුරු ඇඟවීම",
+  "mapOfflineBanner": "නොබැඳි, සුරකින ලද සිතියම",
+  "mapEvacuationMap": "ඉවත් වීමේ සිතියම",
+  "commonTryAgain": "නැවත උත්සාහ කරන්න",
+  "openSettings": "සැකසුම් විවෘත කරන්න",
+  "locationApproximate": "ඔබේ අවසන් දන්නා ස්ථානය භාවිතා කරයි; එය ආසන්න විය හැක.",
+  "earthquakeViewOnMap": "සිතියමේ බලන්න",
+  "earthquakeUsgsDetails": "USGS විස්තර",
+  "settingsPrivacyPolicy": "රහස්‍යතා ප්‍රතිපත්තිය",
+  "settingsTermsOfService": "සේවා කොන්දේසි"
 }

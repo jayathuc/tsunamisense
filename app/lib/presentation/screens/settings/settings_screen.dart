@@ -554,7 +554,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(AppLocalizations.of(context).commonClose),
           ),
         ],
       ),
@@ -566,7 +566,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Privacy Policy')),
+          appBar: AppBar(title: Text(AppLocalizations.of(context).settingsPrivacyPolicy)),
           body: const SingleChildScrollView(
             padding: EdgeInsets.all(16),
             child: Text(
@@ -612,7 +612,7 @@ This app does not collect sensitive personal information.''',
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Terms of Service')),
+          appBar: AppBar(title: Text(AppLocalizations.of(context).settingsTermsOfService)),
           body: const SingleChildScrollView(
             padding: EdgeInsets.all(16),
             child: Text(
