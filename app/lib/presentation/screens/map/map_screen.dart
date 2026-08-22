@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
+import '../../../data/services/location_service.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/api_constants.dart';
@@ -114,32 +114,50 @@ class _MapScreenState extends State<MapScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _useMyLocation(GetraProvider p) async {
+  /// Report why a location request failed, offering a way out of a permanent
+  /// denial rather than leaving the user stuck.
+  void _reportLocationFailure(LocationFailure f, {required bool emergency}) {
     final l = AppLocalizations.of(context);
+    switch (f) {
+      case LocationFailure.servicesOff:
+        _toast(emergency ? l.locationServicesOffEmergency : l.locationServicesOff);
+      case LocationFailure.denied:
+        _toast(emergency
+            ? l.locationPermissionDeniedEmergency
+            : l.locationPermissionDenied);
+      case LocationFailure.deniedForever:
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(emergency
+              ? l.locationPermissionDeniedEmergency
+              : l.locationPermissionDenied),
+          action: SnackBarAction(
+            label: l.openSettings,
+            onPressed: LocationService.openSettings,
+          ),
+          duration: const Duration(seconds: 8),
+        ));
+      case LocationFailure.unavailable:
+        _toast(l.locationUnavailable);
+    }
+  }
+
+  Future<void> _useMyLocation(GetraProvider p) async {
     setState(() => _loadingLocation = true);
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        _toast(l.locationServicesOff);
+      final res = await LocationService.current();
+      if (!res.ok) {
+        _reportLocationFailure(res.failure!, emergency: false);
         return;
       }
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        _toast(l.locationPermissionDenied);
-        return;
-      }
-      final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      final ll = LatLng(pos.latitude, pos.longitude);
+      final ll = LatLng(res.position!.latitude, res.position!.longitude);
+      if (!mounted) return;
       setState(() => _gpsLocation = ll);
       _setOrigin(ll, p, fromGps: true);
       _mapController.move(ll, 15);
-    } catch (_) {
-      _toast(l.locationUnavailable);
+      if (res.isApproximate) {
+        _toast(AppLocalizations.of(context).locationApproximate);
+      }
     } finally {
       if (mounted) setState(() => _loadingLocation = false);
     }
@@ -155,27 +173,18 @@ class _MapScreenState extends State<MapScreen> {
 
   /// Emergency flow: locate the user and route to the nearest DMC shelter via
   /// the safest path, automatically (triggered by a tsunami-confirmed alert).
+  /// Emergency flow: locate the user and route to the nearest DMC shelter via
+  /// the safest path, automatically (triggered by a tsunami-confirmed alert).
   Future<void> _runEmergencyEvacuation(GetraProvider p) async {
-    final l = AppLocalizations.of(context);
     setState(() => _loadingLocation = true);
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        _toast(l.locationServicesOffEmergency);
+      final res = await LocationService.current();
+      if (!res.ok) {
+        _reportLocationFailure(res.failure!, emergency: true);
         return;
       }
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        _toast(l.locationPermissionDeniedEmergency);
-        return;
-      }
-      final pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-      final ll = LatLng(pos.latitude, pos.longitude);
+      final ll = LatLng(res.position!.latitude, res.position!.longitude);
+      if (!mounted) return;
       setState(() {
         _gpsLocation = ll;
         _origin = ll;
@@ -183,8 +192,9 @@ class _MapScreenState extends State<MapScreen> {
       });
       p.computeRoute(ll.latitude, ll.longitude, emergencyDmcOnly: true);
       _mapController.move(ll, 15);
-    } catch (_) {
-      _toast(l.locationUnavailable);
+      if (res.isApproximate) {
+        _toast(AppLocalizations.of(context).locationApproximate);
+      }
     } finally {
       if (mounted) setState(() => _loadingLocation = false);
     }
@@ -230,7 +240,7 @@ class _MapScreenState extends State<MapScreen> {
             backgroundColor: emergency.active ? AppTheme.alertRed : null,
             foregroundColor: emergency.active ? Colors.white : null,
             title: emergency.active
-                ? const Text('TSUNAMI WARNING')
+                ? Text(AppLocalizations.of(context).mapTsunamiWarning)
                 : _DistrictTitle(
                     provider: p,
                     onSelect: (id) => _selectDistrict(p, id),
@@ -485,7 +495,7 @@ class _StatusScaffold extends StatelessWidget {
   const _StatusScaffold({required this.child});
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Evacuation Map')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context).mapEvacuationMap)),
         body: Center(child: child),
       );
 }
@@ -521,7 +531,7 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try again'),
+              label: Text(AppLocalizations.of(context).commonTryAgain),
             ),
           ],
         ),
@@ -537,15 +547,24 @@ class _OfflineBanner extends StatelessWidget {
         right: 0,
         child: Material(
           color: AppTheme.alertYellow.withOpacity(0.95),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.cloud_off, size: 14, color: Colors.black87),
-                SizedBox(width: 6),
-                Text('Offline mode — showing saved map',
-                    style: TextStyle(fontSize: 12, color: Colors.black87)),
+                const Icon(Icons.cloud_off, size: 14, color: Colors.black87),
+                const SizedBox(width: 6),
+                // Flexible: the Sinhala and Tamil versions of this label are far
+                // longer than the English one and overflow a fixed Row.
+                Flexible(
+                  child: Text(
+                    AppLocalizations.of(context).mapOfflineBanner,
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),
