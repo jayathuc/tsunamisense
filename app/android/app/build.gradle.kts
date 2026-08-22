@@ -28,7 +28,10 @@ android {
         applicationId = "com.tsunamisense.tsunamisense_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 21
+        // 23 (Android 6.0) is the floor for workmanager_android, which powers the
+        // background tsunami check. Android 5.x is a negligible share of devices
+        // and cannot run the monitoring the app exists to provide.
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
