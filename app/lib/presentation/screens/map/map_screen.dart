@@ -64,8 +64,8 @@ class _MapScreenState extends State<MapScreen> {
       ..addAll(d.inundation.map((a) => Polygon(
             points: a.outer,
             holePointsList: a.holes,
-            color: AppTheme.alertRed.withOpacity(0.16),
-            borderColor: AppTheme.alertRed.withOpacity(0.65),
+            color: AppTheme.alertRed.withValues(alpha: 0.16),
+            borderColor: AppTheme.alertRed.withValues(alpha: 0.65),
             borderStrokeWidth: 1.5,
           )));
 
@@ -77,7 +77,7 @@ class _MapScreenState extends State<MapScreen> {
         points: r.points,
         strokeWidth: r.isUnsafe ? 3.0 : 1.5,
         color: (r.isUnsafe ? AppTheme.alertRed : AppTheme.alertGreen)
-            .withOpacity(r.isUnsafe ? 0.9 : 0.55),
+            .withValues(alpha: r.isUnsafe ? 0.9 : 0.55),
       ));
     }
     _roadLines
@@ -546,7 +546,7 @@ class _OfflineBanner extends StatelessWidget {
         left: 0,
         right: 0,
         child: Material(
-          color: AppTheme.alertYellow.withOpacity(0.95),
+          color: AppTheme.alertYellow.withValues(alpha: 0.95),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
             child: Row(
@@ -720,7 +720,7 @@ class _DistrictTitle extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                   decoration: BoxDecoration(
-                    color: AppTheme.alertOrange.withOpacity(0.15),
+                    color: AppTheme.alertOrange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(l.mapMapOnly,
@@ -805,7 +805,7 @@ class _Legend extends StatelessWidget {
           children: [
             _line(AppTheme.alertGreen, l.mapLegendSafeRoad),
             _line(AppTheme.alertRed, l.mapLegendFloodRoad),
-            _dot(AppTheme.alertRed.withOpacity(0.35), l.mapLegendInundation),
+            _dot(AppTheme.alertRed.withValues(alpha: 0.35), l.mapLegendInundation),
             if (sources.contains('dmc'))
               _dot(AppTheme.alertGreen, l.mapLegendDmc),
             if (sources.contains('literature') &&
@@ -938,7 +938,7 @@ class _BottomPanel extends StatelessWidget {
     final hint = provider.routingHint;
     final isGuide = hint != null;
     return Card(
-      color: isGuide ? AppTheme.alertOrange.withOpacity(0.12) : null,
+      color: isGuide ? AppTheme.alertOrange.withValues(alpha: 0.12) : null,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -1022,7 +1022,7 @@ class _RouteCard extends StatelessWidget {
     final l = AppLocalizations.of(context);
     if (!route.found) {
       return Card(
-        color: AppTheme.alertYellow.withOpacity(0.18),
+        color: AppTheme.alertYellow.withValues(alpha: 0.18),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(

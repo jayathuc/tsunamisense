@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:latlong2/latlong.dart';
@@ -18,7 +17,6 @@ import 'providers/navigation_provider.dart';
 import 'providers/earthquake_provider.dart';
 import 'providers/lesson_provider.dart';
 import 'providers/checklist_provider.dart';
-import 'providers/safe_zone_provider.dart';
 import 'providers/getra_provider.dart';
 import 'providers/emergency_provider.dart';
 import 'providers/theme_provider.dart';
@@ -53,7 +51,6 @@ class TsunamiSenseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EarthquakeProvider()),
         ChangeNotifierProvider(create: (_) => LessonProvider()),
         ChangeNotifierProvider(create: (_) => ChecklistProvider()),
-        ChangeNotifierProvider(create: (_) => SafeZoneProvider()),
         ChangeNotifierProvider(create: (_) => GetraProvider()),
         ChangeNotifierProvider(create: (_) => EmergencyProvider()),
         ChangeNotifierProvider(create: (_) => AppSettingsProvider()),

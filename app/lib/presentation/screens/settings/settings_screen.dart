@@ -504,7 +504,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryBlue.withOpacity(0.1),
+                color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text('🌊', style: TextStyle(fontSize: 24)),
@@ -691,7 +691,7 @@ class _EmergencyContactTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: AppTheme.alertRed.withOpacity(0.1),
+        backgroundColor: AppTheme.alertRed.withValues(alpha: 0.1),
         child: Icon(icon, color: AppTheme.alertRed),
       ),
       title: Text(title),

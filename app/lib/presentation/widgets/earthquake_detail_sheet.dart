@@ -55,7 +55,7 @@ class EarthquakeDetailSheet extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: earthquake.alertColor.withOpacity(0.15),
+                color: earthquake.alertColor.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
                 border: Border.all(color: earthquake.alertColor, width: 3),
               ),
@@ -121,9 +121,9 @@ class EarthquakeDetailSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: earthquake.alertColor.withOpacity(0.1),
+                color: earthquake.alertColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: earthquake.alertColor.withOpacity(0.3)),
+                border: Border.all(color: earthquake.alertColor.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

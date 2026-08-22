@@ -115,10 +115,10 @@ class HomeScreen extends StatelessWidget {
       builder: (context, settings, _) {
         if (!settings.developerMode) return const SizedBox.shrink();
         return Card(
-          color: Colors.deepPurple.withOpacity(0.06),
+          color: Colors.deepPurple.withValues(alpha: 0.06),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.deepPurple.withOpacity(0.4)),
+            side: BorderSide(color: Colors.deepPurple.withValues(alpha: 0.4)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -192,7 +192,7 @@ class HomeScreen extends StatelessWidget {
         final color = _getAlertColor(alertLevel);
 
         return Card(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: color, width: 2),
@@ -455,7 +455,7 @@ class _QuickActionCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color),
@@ -496,7 +496,7 @@ class _EarthquakeListItem extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(

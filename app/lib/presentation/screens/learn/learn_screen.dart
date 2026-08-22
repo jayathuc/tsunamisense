@@ -77,7 +77,7 @@ class LearnScreen extends StatelessWidget {
     final progress = provider.completionPercentage;
 
     return Card(
-      color: AppTheme.primaryBlue.withOpacity(0.1),
+      color: AppTheme.primaryBlue.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -196,7 +196,7 @@ class _LessonCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: lesson.isCompleted
                       ? AppTheme.alertGreen
-                      : AppTheme.primaryBlue.withOpacity(0.2),
+                      : AppTheme.primaryBlue.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -512,12 +512,12 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             Color? backgroundColor;
             if (showResult) {
               if (isCorrect) {
-                backgroundColor = AppTheme.alertGreen.withOpacity(0.2);
+                backgroundColor = AppTheme.alertGreen.withValues(alpha: 0.2);
               } else if (isSelected && !isCorrect) {
-                backgroundColor = AppTheme.alertRed.withOpacity(0.2);
+                backgroundColor = AppTheme.alertRed.withValues(alpha: 0.2);
               }
             } else if (isSelected) {
-              backgroundColor = AppTheme.primaryBlue.withOpacity(0.2);
+              backgroundColor = AppTheme.primaryBlue.withValues(alpha: 0.2);
             }
 
             return Padding(
@@ -562,7 +562,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryBlue.withOpacity(0.1),
+                color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(

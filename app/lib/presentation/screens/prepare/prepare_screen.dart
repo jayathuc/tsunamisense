@@ -235,8 +235,8 @@ class _ProgressHeader extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isComplete
-              ? [AppTheme.alertGreen, AppTheme.alertGreen.withOpacity(0.8)]
-              : [AppTheme.primaryBlue, AppTheme.primaryBlue.withOpacity(0.8)],
+              ? [AppTheme.alertGreen, AppTheme.alertGreen.withValues(alpha: 0.8)]
+              : [AppTheme.primaryBlue, AppTheme.primaryBlue.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -256,7 +256,7 @@ class _ProgressHeader extends StatelessWidget {
                     child: CircularProgressIndicator(
                       value: percentage,
                       strokeWidth: 8,
-                      backgroundColor: Colors.white.withOpacity(0.3),
+                      backgroundColor: Colors.white.withValues(alpha: 0.3),
                       valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
@@ -274,7 +274,7 @@ class _ProgressHeader extends StatelessWidget {
                       Text(
                         '$completedItems/$totalItems',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 12,
                         ),
                       ),
@@ -303,7 +303,7 @@ class _ProgressHeader extends StatelessWidget {
                           ? l.prepareCompleteMsg
                           : l.prepareIncompleteMsg,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 14,
                       ),
                     ),
@@ -361,7 +361,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.14),
+                      color: color.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(_iconFor(widget.category.icon),
@@ -399,7 +399,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                           child: LinearProgressIndicator(
                             value: percentage,
                             minHeight: 6,
-                            backgroundColor: color.withOpacity(0.15),
+                            backgroundColor: color.withValues(alpha: 0.15),
                             valueColor: AlwaysStoppedAnimation<Color>(color),
                           ),
                         ),
@@ -531,7 +531,7 @@ class _ChecklistItemTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.alertRed.withOpacity(0.1),
+                  color: AppTheme.alertRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(

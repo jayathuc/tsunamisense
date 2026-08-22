@@ -280,7 +280,7 @@ class DistrictData {
     for (var i = 0; i < path.length - 1; i++) {
       final a = path[i], b = path[i + 1];
       final na = nodes[a];
-      List<LatLng>? seg = _edgeGeom['${a}_${b}'];
+      List<LatLng>? seg = _edgeGeom['${a}_$b'];
       if (seg == null || seg.isEmpty) {
         // no stored geometry: straight line between the two intersections
         final nb = nodes[b];
